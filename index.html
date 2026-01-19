@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fitness Physics Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+  <!-- Navigation (Visible on all pages when logged in, or just Landing) -->
+  <nav id="main-nav" class="hidden">
+    <div class="nav-content">
+      <span class="logo">🚲 PhysicsEngine</span>
+      <button id="logout-btn">Logout</button>
+    </div>
+  </nav>
+
+  <!-- LANDING PAGE -->
+  <div id="landing-view" class="view-section">
+    <div class="hero">
+      <h1>Turn Sweat into Summits 🏔️</h1>
+      <p>Convert your stationary bike output into real-world climbing achievements.</p>
+      <div class="cta-group">
+        <button id="landing-signup-btn" class="btn btn-primary">Start Climbing</button>
+        <button id="landing-login-btn" class="btn btn-secondary">Login</button>
+      </div>
+    </div>
+    <div class="features">
+      <div class="feature-card">
+        <h3>📊 visualize</h3>
+        <p>See your output in meters and feet.</p>
+      </div>
+      <div class="feature-card">
+        <h3>🌍 Contextualize</h3>
+        <p>Compare to famous landmarks like the Eiffel Tower.</p>
+      </div>
+      <div class="feature-card">
+        <h3>🚀 Motivate</h3>
+        <p>Push harder to reach the next summit.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGIN PAGE -->
+  <div id="login-view" class="view-section hidden">
+    <div class="auth-card">
+      <h2>Welcome Back! 👋</h2>
+      <form id="login-form">
+        <div class="input-group">
+          <label>Username</label>
+          <input type="text" id="login-username" required>
+        </div>
+        <div class="input-group">
+          <label>Password</label>
+          <input type="password" id="login-password" required>
+        </div>
+        <div class="input-group checkbox-group">
+          <input type="checkbox" id="login-remember">
+          <label for="login-remember">Remember Me</label>
+        </div>
+        <button type="submit" class="btn btn-primary">Log In</button>
+      </form>
+      <p>No account? <a href="#" id="to-signup-link">Sign Up</a></p>
+      <button class="btn-text" id="login-back-btn">← Back</button>
+    </div>
+  </div>
+
+  <!-- SIGNUP PAGE -->
+  <div id="signup-view" class="view-section hidden">
+    <div class="auth-card">
+      <h2>Join the Climb! 🚀</h2>
+      <form id="signup-form">
+        <div class="input-group">
+          <label>Full Name</label>
+          <input type="text" id="signup-name" required>
+        </div>
+        <div class="input-group">
+          <label>Email Address</label>
+          <input type="email" id="signup-email" required>
+        </div>
+        <div class="input-group">
+          <label>Choose Username</label>
+          <input type="text" id="signup-username" required>
+        </div>
+        <div class="input-group">
+          <label>Password</label>
+          <input type="password" id="signup-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Account</button>
+      </form>
+      <p>Already have an account? <a href="#" id="to-login-link">Log In</a></p>
+      <button class="btn-text" id="signup-back-btn">← Back</button>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="app-view" class="view-section hidden">
+    <header>
+      <h1>Fitness Physics Engine</h1>
+      <p>Convert your Peloton output into real-world achievements.</p>
+
+      <!-- Tab Navigation -->
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="calculator">Climb</button>
+        <button class="tab-btn" data-tab="profile">Profile & Apps</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- CALCULATOR TAB -->
+      <div id="tab-calculator" class="tab-content active">
+        <div class="card input-section">
+          <div class="input-group">
+            <label for="output-kj">Total Output (kJ)</label>
+            <input type="number" id="output-kj" placeholder="e.g. 400" min="0">
+          </div>
+
+          <div class="input-group">
+            <label for="user-weight">Your Weight (kg)</label>
+            <input type="number" id="user-weight" placeholder="e.g. 80" min="0">
+          </div>
+
+          <button id="calculate-btn" class="btn btn-primary">Calculate Climb</button>
+        </div>
+
+        <div id="results" class="card results-section hidden">
+          <h2>Your Vertical Climb</h2>
+
+          <div class="stats-grid">
+            <div class="stat-box">
+              <span class="stat-value" id="res-meters">0</span>
+              <span class="stat-label">Meters</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-value" id="res-feet">0</span>
+              <span class="stat-label">Feet</span>
+            </div>
+          </div>
+
+          <div class="landmark-container">
+            <h3>Perspective</h3>
+            <p id="res-landmark">...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFILE TAB -->
+      <div id="tab-profile" class="tab-content hidden">
+        <div class="card profile-section">
+          <h2>Your Settings</h2>
+          <div class="input-section">
+            <div class="input-group">
+              <label for="profile-weight">Default Weight (kg)</label>
+              <input type="number" id="profile-weight" placeholder="e.g. 80" min="0">
+            </div>
+            <div class="input-group">
+              <label for="profile-goal">Weekly Goal (km)</label>
+              <input type="number" id="profile-goal" placeholder="e.g. 100" min="0">
+            </div>
+          </div>
+          <p class="description" style="margin-bottom: 1rem;">These settings help tailor the experience to you.</p>
+
+          <div class="input-group" style="margin-top: 1rem;">
+            <label>Theme</label>
+            <div class="theme-selector">
+              <button class="theme-btn active" data-theme="theme-dark">🌑 Dark</button>
+              <button class="theme-btn" data-theme="theme-light">☀️ Light</button>
+              <button class="theme-btn" data-theme="theme-neon">⚡ Neon</button>
+            </div>
+          </div>
+
+          <button id="save-profile-btn" class="btn btn-primary" style="margin-top: 1.5rem;">Save Settings</button>
+        </div>
+
+        <div class="card achievements-section" style="margin-top: 2rem;">
+          <h2>Achievements</h2>
+          <div class="badges-grid">
+            <div class="badge locked" id="badge-first-ride">
+              <span class="badge-icon">🚴</span>
+              <p>First Ride</p>
+            </div>
+            <div class="badge locked" id="badge-eiffel">
+              <span class="badge-icon">🗼</span>
+              <p>Eiffel Tower</p>
+            </div>
+            <div class="badge locked" id="badge-everest">
+              <span class="badge-icon">🏔️</span>
+              <p>Mt. Everest</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card apps-section">
+          <h2>Connect Apps</h2>
+          <p>Sync your workouts or find classes.</p>
+
+          <div class="app-tabs">
+            <button class="app-tab-btn active" data-app-tab="peloton">Peloton</button>
+            <button class="app-tab-btn" data-app-tab="apple">Apple Fitness</button>
+          </div>
+
+          <div id="app-content-peloton" class="app-content active">
+            <div class="app-details">
+              <span class="app-icon">🚴‍♀️</span>
+              <p>Join live classes and track your leaderboard status.</p>
+              <a href="https://www.onepeloton.com/app" target="_blank" class="btn btn-secondary app-link-btn">Open
+                Peloton</a>
+            </div>
+          </div>
+
+          <div id="app-content-apple" class="app-content hidden">
+            <div class="app-details">
+              <span class="app-icon">🏃‍♂️</span>
+              <p>Close your rings and sync with Apple Watch.</p>
+              <a href="https://www.apple.com/apple-fitness-plus/" target="_blank"
+                class="btn btn-secondary app-link-btn">Open Apple Fitness</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p>Assumes Bike Weight: 61kg | Efficiency: 100% Mechanical</p>
+    </footer>
+  </div>
+  <script type="module" src="/main.js"></script>
+</body>
+
+</html>
