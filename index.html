@@ -200,6 +200,12 @@
                   <option value="hike">🥾 Hike</option>
                 </select>
                 <input type="date" id="challenge-log-date" class="manual-input">
+                <div style="display: flex; gap: 0.25rem; align-items: center;">
+                  <input type="number" id="challenge-log-duration-hours" class="manual-input" placeholder="Hrs" min="0"
+                    style="width: 4rem;">
+                  <input type="number" id="challenge-log-duration-minutes" class="manual-input" placeholder="Mins"
+                    min="0" max="59" style="width: 4rem;">
+                </div>
               </div>
               <div class="form-row">
                 <input type="text" id="challenge-log-desc" placeholder="Description (e.g. Morning 5K)"
@@ -215,9 +221,11 @@
                   <input type="number" id="challenge-log-miles" placeholder="Enter miles" class="manual-input">
                 </div>
               </div>
-              <button id="challenge-log-workout-btn" class="btn btn-secondary"
-                style="width: 100%; margin-top: 0.5rem;">Log
-                Workout</button>
+              <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                <button id="challenge-log-workout-btn" class="btn btn-secondary" style="flex: 1;">Log Workout</button>
+                <button id="cancel-edit-btn" class="btn btn-secondary"
+                  style="display: none; background: rgba(255,100,100,0.2); border-color: rgba(255,100,100,0.3);">Cancel</button>
+              </div>
             </div>
 
             <div class="workouts-container">
@@ -417,37 +425,6 @@
   </div>
 
 
-  <script>
-    (function () {
-      const debugDiv = document.getElementById('debug-log-output');
-      if (!debugDiv) return;
-
-      const originalLog = console.log;
-      const originalError = console.error;
-
-      function appendLog(message, color) {
-        const line = document.createElement('div');
-        line.textContent = message;
-        line.style.color = color || 'lime';
-        line.style.borderBottom = '1px solid rgba(0,255,0,0.2)';
-        line.style.padding = '2px 0';
-        debugDiv.appendChild(line);
-        debugDiv.scrollTop = debugDiv.scrollHeight;
-      }
-
-      console.log = function (...args) {
-        originalLog.apply(console, args);
-        appendLog(args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '), 'lime');
-      };
-
-      console.error = function (...args) {
-        originalError.apply(console, args);
-        appendLog(args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '), 'red');
-      };
-
-      console.log('Debug Logger Active via Script');
-    })();
-  </script>
   <script type="module" src="main.js"></script>
 
 
