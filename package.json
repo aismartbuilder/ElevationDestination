@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build:elevationdestination-dev": "vite build --mode development",
+    "build:elevationdestination": "vite build --mode production",
+    "deploy:elevationdestination-dev": "firebase deploy --only hosting:dev -P elevationdestination-dev",
+    "deploy:elevationdestination": "firebase deploy --only hosting:prod -P elevationdestination",
     "preview": "vite preview"
   },
   "devDependencies": {

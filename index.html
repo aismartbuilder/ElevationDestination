@@ -118,23 +118,45 @@
             <div class="input-group">
               <div class="label-row">
                 <label for="profile-weight">Default Weight</label>
-                <div class="unit-toggle">
-                  <span class="unit-option active" data-unit-type="weight" data-unit="kg">kg</span>
-                  <span class="unit-option" data-unit-type="weight" data-unit="lbs">lbs</span>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                  <button id="view-weight-history-btn" class="btn-icon" title="View Weight History"
+                    style="font-size: 0.8rem; padding: 2px 4px; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px;">📜</button>
+                  <div class="unit-toggle">
+                    <span class="unit-option active" data-unit-type="weight" data-unit="kg">kg</span>
+                    <span class="unit-option" data-unit-type="weight" data-unit="lbs">lbs</span>
+                  </div>
                 </div>
               </div>
               <input type="number" id="profile-weight" placeholder="e.g. 80" min="0">
+              <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem; align-items: center;">
+                <label style="font-size: 0.75rem; white-space: nowrap;">Log Date:</label>
+                <input type="date" id="profile-weight-date" class="manual-input"
+                  style="padding: 0.25rem; font-size: 0.8rem;">
+              </div>
+              <div id="weight-history-list" class="hidden"
+                style="margin-top: 0.5rem; max-height: 150px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 0.5rem; font-size: 0.85rem;">
+                <!-- Weight history injected here -->
+              </div>
             </div>
 
-            <div class="input-group">
+            <div class="input-group" style="margin-top: 1.5rem;">
               <div class="label-row">
                 <label for="profile-goal">Weekly Goal</label>
-                <div class="unit-toggle">
-                  <span class="unit-option active" data-unit-type="distance" data-unit="km">km</span>
-                  <span class="unit-option" data-unit-type="distance" data-unit="mi">mi</span>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                  <button id="view-goal-history-btn" class="btn-icon" title="View Goal History"
+                    style="font-size: 0.8rem; padding: 2px 4px; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px;">📜</button>
                 </div>
               </div>
-              <input type="number" id="profile-goal" placeholder="e.g. 100" min="0">
+              <input type="text" id="profile-goal" placeholder="e.g. 100 or '3 sumits'" class="manual-input">
+              <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem; align-items: center;">
+                <label style="font-size: 0.75rem; white-space: nowrap;">Log Date:</label>
+                <input type="date" id="profile-goal-date" class="manual-input"
+                  style="padding: 0.25rem; font-size: 0.8rem;">
+              </div>
+              <div id="goal-history-list" class="hidden"
+                style="margin-top: 0.5rem; max-height: 150px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 0.5rem; font-size: 0.85rem;">
+                <!-- Goal history injected here -->
+              </div>
             </div>
 
             <div class="input-group" style="margin-top: 1rem;">
@@ -221,6 +243,57 @@
                   <input type="number" id="challenge-log-miles" placeholder="Enter miles" class="manual-input">
                 </div>
               </div>
+
+              <!-- Optional Detailed Stats -->
+              <details
+                style="margin-top: 1rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden;">
+                <summary
+                  style="padding: 0.75rem; background: rgba(255,255,255,0.05); cursor: pointer; font-size: 0.9rem; user-select: none;">
+                  Optional Details (Speed, Cadence, Notes...)
+                </summary>
+                <div
+                  style="padding: 1rem; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 0.75rem;">
+
+                  <div class="form-row" style="gap: 0.5rem;">
+                    <div class="input-group" style="flex: 1; margin: 0;">
+                      <label for="log-cadence" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Avg Cadence
+                        (rpm)</label>
+                      <input type="number" id="log-cadence" placeholder="e.g. 85" class="manual-input">
+                    </div>
+                    <div class="input-group" style="flex: 1; margin: 0;">
+                      <label for="log-speed" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Avg Speed (mph)</label>
+                      <input type="number" id="log-speed" placeholder="e.g. 18" class="manual-input">
+                    </div>
+                  </div>
+
+                  <div class="form-row" style="gap: 0.5rem;">
+                    <div class="input-group" style="flex: 1; margin: 0;">
+                      <label for="log-resistance" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Avg Resistance
+                        (%)</label>
+                      <input type="number" id="log-resistance" placeholder="e.g. 45" class="manual-input">
+                    </div>
+                    <div class="input-group" style="flex: 1; margin: 0;">
+                      <label for="log-elevation" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Elevation
+                        (ft)</label>
+                      <input type="number" id="log-elevation" placeholder="e.g. 1200" class="manual-input">
+                    </div>
+                  </div>
+
+                  <div class="form-row" style="gap: 0.5rem;">
+                    <div class="input-group" style="flex: 1; margin: 0;">
+                      <label for="log-pace" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Avg Pace (min/mi)</label>
+                      <input type="text" id="log-pace" placeholder="e.g. 8:30" class="manual-input">
+                    </div>
+                  </div>
+
+                  <div class="input-group" style="margin: 0;">
+                    <label for="log-notes" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Notes</label>
+                    <textarea id="log-notes" class="manual-input" rows="3"
+                      placeholder="How did it feel? Any details..."></textarea>
+                  </div>
+
+                </div>
+              </details>
               <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
                 <button id="challenge-log-workout-btn" class="btn btn-secondary" style="flex: 1;">Log Workout</button>
                 <button id="cancel-edit-btn" class="btn btn-secondary"

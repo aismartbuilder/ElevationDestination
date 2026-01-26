@@ -1,5 +1,23 @@
 {
   "projects": {
-    "default": "elevationdestination2026-dev"
-  }
+    "elevationdestination-dev": "elevationdestination2026-dev",
+    "elevationdestination": "elevationdestination2026"
+  },
+  "targets": {
+    "elevationdestination2026-dev": {
+      "hosting": {
+        "dev": [
+          "elevationdestination-dev"
+        ]
+      }
+    },
+    "elevationdestination2026": {
+      "hosting": {
+        "prod": [
+          "elevationdestination"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

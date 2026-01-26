@@ -182,6 +182,123 @@ export const database = {
         }
     },
 
+    // --- Weight and Goal Logging ---
+    async addWeightLog(weight, unit, customDate) {
+        try {
+            const uid = getUserId();
+            const logsRef = collection(db, 'users', uid, 'weight_history');
+            await addDoc(logsRef, {
+                value: weight,
+                unit: unit,
+                date: customDate || new Date().toISOString()
+            });
+            console.log('✅ Weight log added to Cloud');
+            return true;
+        } catch (e) {
+            console.error('Error adding weight log:', e);
+            return false;
+        }
+    },
+
+    async getWeightLogs() {
+        try {
+            const uid = getUserId();
+            const logsRef = collection(db, 'users', uid, 'weight_history');
+            const q = query(logsRef, orderBy('date', 'desc'));
+            const querySnapshot = await getDocs(q);
+            const logs = [];
+            querySnapshot.forEach((doc) => {
+                logs.push({ ...doc.data(), id: doc.id });
+            });
+            return logs;
+        } catch (e) {
+            console.error('Error fetching weight logs:', e);
+            return [];
+        }
+    },
+
+    async updateWeightLog(logId, data) {
+        try {
+            const uid = getUserId();
+            const logRef = doc(db, 'users', uid, 'weight_history', logId);
+            await setDoc(logRef, data, { merge: true });
+            return true;
+        } catch (e) {
+            console.error('Error updating weight log:', e);
+            return false;
+        }
+    },
+
+    async deleteWeightLog(logId) {
+        try {
+            const uid = getUserId();
+            const logRef = doc(db, 'users', uid, 'weight_history', logId);
+            await deleteDoc(logRef);
+            return true;
+        } catch (e) {
+            console.error('Error deleting weight log:', e);
+            return false;
+        }
+    },
+
+    async addGoalLog(goal, unit, customDate) {
+        try {
+            const uid = getUserId();
+            const logsRef = collection(db, 'users', uid, 'goal_history');
+            await addDoc(logsRef, {
+                value: goal,
+                unit: unit,
+                date: customDate || new Date().toISOString()
+            });
+            console.log('✅ Goal log added to Cloud');
+            return true;
+        } catch (e) {
+            console.error('Error adding goal log:', e);
+            return false;
+        }
+    },
+
+    async getGoalLogs() {
+        try {
+            const uid = getUserId();
+            const logsRef = collection(db, 'users', uid, 'goal_history');
+            const q = query(logsRef, orderBy('date', 'desc'));
+            const querySnapshot = await getDocs(q);
+            const logs = [];
+            querySnapshot.forEach((doc) => {
+                logs.push({ ...doc.data(), id: doc.id });
+            });
+            return logs;
+        } catch (e) {
+            console.error('Error fetching goal logs:', e);
+            return [];
+        }
+    },
+
+    async updateGoalLog(logId, data) {
+        try {
+            const uid = getUserId();
+            const logRef = doc(db, 'users', uid, 'goal_history', logId);
+            await setDoc(logRef, data, { merge: true });
+            return true;
+        } catch (e) {
+            console.error('Error updating goal log:', e);
+            return false;
+        }
+    },
+
+    async deleteGoalLog(logId) {
+        try {
+            const uid = getUserId();
+            const logRef = doc(db, 'users', uid, 'goal_history', logId);
+            await deleteDoc(logRef);
+            return true;
+        } catch (e) {
+            console.error('Error deleting goal log:', e);
+            return false;
+        }
+    },
+
     // --- Migration Logic ---
     async migrateLocalStorageToCloud() {
         if (!auth.currentUser) return;

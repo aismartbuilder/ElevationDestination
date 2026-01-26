@@ -108,7 +108,128 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         cancelBtn.focus();
+
     }
+
+
+    // --- Workout Details Modal ---
+    function showWorkoutDetailsModal(workout) {
+        const overlay = document.createElement('div');
+        overlay.className = 'confirmation-overlay'; // Reuse overlay style
+
+        const modal = document.createElement('div');
+        modal.className = 'confirmation-modal'; // Reuse modal base style
+        modal.style.maxWidth = '500px'; // Slightly wider for more data
+        modal.style.width = '95%';
+        modal.style.textAlign = 'left';
+        modal.style.background = 'linear-gradient(145deg, #1e1e1e, #252525)';
+        modal.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
+        modal.style.border = '1px solid rgba(255,255,255,0.1)';
+
+        // --- Helper: Format Value ---
+        const fmt = (val, suffix = '') => val ? `<span style="color:white; font-weight:600;">${val}</span> <span style="font-size:0.8em; color:#aaa;">${suffix}</span>` : '<span style="color:#555;">-</span>';
+
+        // --- Calculate Extras ---
+        // Calories (Estimate if not present)
+        let calories = workout.calories;
+        if (!calories) {
+            if (workout.outputKj) {
+                // 1 kJ work ~= 1 kcal burned (roughly 20-25% efficiency)
+                calories = parseFloat(workout.outputKj);
+            } else if (workout.miles) {
+                // Rough estimate: 100 kcal / mile (running) or 40-50 / mile (cycling)
+                // Defaulting to "Generic Cardio" ~100kcal/10 mins or based on miles
+                const dist = parseFloat(workout.miles);
+                calories = (dist * 50).toFixed(0); // Very rough guess for cycling/generic
+            }
+        }
+
+        // Heart Rate
+        const hr = workout.heartRate || workout.avgHr || null;
+
+        // Grid Item helper
+        const gridItem = (label, value) => `
+        <div style="background: rgba(255,255,255,0.03); padding: 0.75rem; border-radius: 8px; text-align: center;">
+            <div style="font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.25rem;">${label}</div>
+            <div style="font-size: 1.1rem;">${value}</div>
+        </div>
+    `;
+
+        // Elevation calc
+        let elevationDisplay = '-';
+        if (workout.elevation) {
+            let elMeters = (parseFloat(workout.elevation) * 0.3048).toFixed(0);
+            elevationDisplay = `${elMeters}m / ${workout.elevation}ft`;
+        } else if (workout.outputKj || workout.output) {
+            let weight = parseFloat(appData.settings.weight) || 80;
+            if (appData.settings.unit_weight === 'lbs') weight *= 0.453592;
+            const inputVal = parseFloat(workout.outputKj || workout.output);
+            if (!isNaN(inputVal)) {
+                const el = calculateElevation(inputVal, weight);
+                elevationDisplay = `${el.meters}m / ${el.feet}ft`;
+            }
+        }
+
+        // Modal Content
+        modal.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:1rem;">
+            <div>
+                <h3 style="margin:0; font-size:1.4rem; color: white;">${workout.title}</h3>
+                <div style="color: var(--primary-color); font-size: 0.9rem; margin-top: 0.25rem;">
+                    ${formatDateForDisplay(workout.date)} &bull; ${workout.type ? workout.type.toUpperCase() : 'WORKOUT'}
+                </div>
+            </div>
+            <button class="btn-close-modal" style="background:none; border:none; color:#aaa; font-size:1.8rem; cursor:pointer; line-height: 1;">&times;</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.5rem;">
+            ${gridItem('Duration', workout.duration ? formatDurationForDisplay(workout.duration) : '-')}
+            ${gridItem('Distance', workout.miles ? fmt(workout.miles, 'mi') + ' / ' + fmt((workout.miles * 1.609).toFixed(1), 'km') : '-')}
+            
+            ${gridItem('Energy', workout.outputKj ? fmt(workout.outputKj, 'kJ') : '-')}
+            ${gridItem('Calories', calories ? fmt(calories, 'kcal') : '-')}
+            
+            ${gridItem('Avg Cadence', workout.cadence ? fmt(workout.cadence, 'rpm') : '-')}
+            ${gridItem('Avg Heart Rate', hr ? fmt(hr, 'bpm') : '-')}
+            
+            ${gridItem('Avg Speed', workout.speed ? fmt(workout.speed, 'mph') : '-')}
+            ${gridItem('Avg Power', workout.output ? fmt(workout.output, 'w') : '-')}
+        </div>
+
+        <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 3px solid var(--primary-color);">
+            <div style="font-size: 0.75rem; color: #888; text-transform: uppercase;">Est. Elevation Gain</div>
+            <div style="font-size: 1.2rem; font-weight: bold; margin-top: 0.25rem;">${elevationDisplay}</div>
+        </div>
+
+        ${workout.notes ? `
+        <div style="margin-bottom: 1.5rem;">
+            <div style="font-size: 0.9rem; color: #ccc; margin-bottom: 0.5rem; font-weight: bold;">Notes</div>
+            <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; color: #bbb; font-style: italic; line-height: 1.5;">
+                ${workout.notes.replace(/\n/g, '<br>')}
+            </div>
+        </div>
+        ` : ''}
+
+        <div style="text-align: right;">
+            <button class="btn-close-action" style="background: var(--primary-color); color: #000; border: none; padding: 0.75rem 2rem; border-radius: 30px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: transform 0.2s;">Close</button>
+        </div>
+    `;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        function close() {
+            overlay.classList.add('fade-out'); // Ensure CSS exists or it just does nothing
+            setTimeout(() => overlay.remove(), 200); // Small delay for hypothetical animation
+        }
+
+        modal.querySelector('.btn-close-modal').addEventListener('click', close);
+        modal.querySelector('.btn-close-action').addEventListener('click', close);
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) close();
+        });
+    }
+
 
     const logoutBtn = document.getElementById('logout-btn');
 
@@ -366,7 +487,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Profile Settings ---
     const profileWeightInput = document.getElementById('profile-weight');
     const profileGoalInput = document.getElementById('profile-goal');
+    const profileWeightDateInput = document.getElementById('profile-weight-date');
+    const profileGoalDateInput = document.getElementById('profile-goal-date');
     const saveProfileBtn = document.getElementById('save-profile-btn');
+
+    let isWeightModified = false;
+    let isGoalModified = false;
 
     const weightToggles = document.querySelectorAll('[data-unit-type="weight"]');
     const distanceToggles = document.querySelectorAll('[data-unit-type="distance"]');
@@ -410,16 +536,52 @@ document.addEventListener('DOMContentLoaded', () => {
         if (appData.settings.goal && profileGoalInput) {
             profileGoalInput.value = appData.settings.goal;
         }
+        // Reset modification flags when loading
+        isWeightModified = false;
+        isGoalModified = false;
     }
+
+    // Modification tracking
+    if (profileWeightInput) profileWeightInput.addEventListener('input', () => { isWeightModified = true; });
+    if (profileWeightDateInput) profileWeightDateInput.addEventListener('change', () => { isWeightModified = true; });
+    if (profileGoalInput) profileGoalInput.addEventListener('input', () => { isGoalModified = true; });
+    if (profileGoalDateInput) profileGoalDateInput.addEventListener('change', () => { isGoalModified = true; });
 
     saveProfileBtn.addEventListener('click', async () => {
         const weight = profileWeightInput.value;
         const goal = profileGoalInput.value;
+        const weightDate = profileWeightDateInput ? profileWeightDateInput.value : null;
+        const goalDate = profileGoalDateInput ? profileGoalDateInput.value : null;
 
-        if (weight) appData.settings.weight = weight;
-        if (goal) appData.settings.goal = goal;
+        const oldWeight = appData.settings.weight;
+        const oldGoal = appData.settings.goal;
 
+        let profileUpdates = {};
+
+        // Log Weight if modified
+        if (isWeightModified && weight) {
+            await database.addWeightLog(weight, appData.settings.unit_weight || 'kg', weightDate || null);
+            profileUpdates.weight = weight;
+            isWeightModified = false;
+        } else if (weight && weight !== oldWeight) {
+            // Backup check for value change even if input event missed
+            profileUpdates.weight = weight;
+        }
+
+        // Log Goal if modified
+        if (isGoalModified && goal) {
+            await database.addGoalLog(goal, appData.settings.unit_distance || 'km', goalDate || null);
+            // Clear goal from UI and state as user requested it to be an event-like log
+            if (profileGoalInput) profileGoalInput.value = '';
+            appData.settings.goal = '';
+            profileUpdates.goal = '';
+            isGoalModified = false;
+        }
+
+        // Apply all profile updates at once
+        Object.assign(appData.settings, profileUpdates);
         const success = await database.saveUserProfile(appData.settings);
+
         if (success) {
             showNotification('Settings Saved', 'Profile updated.', '✅');
             if (settingsDropdown) settingsDropdown.classList.add('hidden');
@@ -427,6 +589,170 @@ document.addEventListener('DOMContentLoaded', () => {
             showNotification('Error', 'Failed to save settings.', '⚠️');
         }
     });
+
+    // --- Weight & Goal History Rendering ---
+    const weightHistoryBtn = document.getElementById('view-weight-history-btn');
+    const goalHistoryBtn = document.getElementById('view-goal-history-btn');
+    const weightHistoryList = document.getElementById('weight-history-list');
+    const goalHistoryList = document.getElementById('goal-history-list');
+
+    function formatLogDate(dateStr) {
+        if (!dateStr) return 'Unknown Date';
+
+        // Extract yyyy-mm-dd from either pure date string or ISO string
+        const parts = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+
+        if (parts.includes('-')) {
+            const [y, m, d] = parts.split('-').map(Number);
+            if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+                return `${m}/${d}/${y}`;
+            }
+        }
+
+        // Fallback for any other format
+        return dateStr;
+    }
+
+    async function renderWeightHistory() {
+        if (!weightHistoryList) return;
+        weightHistoryList.innerHTML = '<div style="text-align:center; padding: 0.5rem;">Loading...</div>';
+        const logs = await database.getWeightLogs();
+        if (logs.length === 0) {
+            weightHistoryList.innerHTML = '<div style="text-align:center; color:#888;">No history yet.</div>';
+            return;
+        }
+
+        weightHistoryList.innerHTML = '';
+        logs.forEach(l => {
+            const dateStr = formatLogDate(l.date);
+            const item = document.createElement('div');
+            item.style.display = 'flex';
+            item.style.justifyContent = 'space-between';
+            item.style.alignItems = 'center';
+            item.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+            item.style.padding = '4px 0';
+            item.innerHTML = `
+                <div style="flex: 1;">
+                    <span style="font-weight: 600;">${l.value} ${l.unit}</span>
+                    <span style="color:#888; font-size: 0.75rem; margin-left: 0.5rem;">${dateStr}</span>
+                </div>
+                <div style="display: flex; gap: 0.25rem;">
+                    <button class="btn-icon edit-log" style="font-size: 0.8rem; opacity: 0.6;" title="Edit">✏️</button>
+                    <button class="btn-icon delete-log" style="font-size: 0.8rem; opacity: 0.6; color: #ff5555;" title="Delete">🗑️</button>
+                </div>
+            `;
+
+            item.querySelector('.edit-log').addEventListener('click', () => editWeightLog(l));
+            item.querySelector('.delete-log').addEventListener('click', () => deleteWeightLog(l));
+
+            weightHistoryList.appendChild(item);
+        });
+    }
+
+    async function renderGoalHistory() {
+        if (!goalHistoryList) return;
+        goalHistoryList.innerHTML = '<div style="text-align:center; padding: 0.5rem;">Loading...</div>';
+        const logs = await database.getGoalLogs();
+        if (logs.length === 0) {
+            goalHistoryList.innerHTML = '<div style="text-align:center; color:#888;">No history yet.</div>';
+            return;
+        }
+
+        goalHistoryList.innerHTML = '';
+        logs.forEach(l => {
+            const isNumeric = !isNaN(parseFloat(l.value)) && isFinite(l.value);
+            const displayValue = isNumeric ? `${l.value} ${l.unit}` : l.value;
+            const dateStr = formatLogDate(l.date);
+
+            const item = document.createElement('div');
+            item.style.display = 'flex';
+            item.style.justifyContent = 'space-between';
+            item.style.alignItems = 'center';
+            item.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+            item.style.padding = '4px 0';
+            item.innerHTML = `
+                <div style="flex: 1;">
+                    <span style="font-weight: 600;">${displayValue}</span>
+                    <span style="color:#888; font-size: 0.75rem; margin-left: 0.5rem;">${dateStr}</span>
+                </div>
+                <div style="display: flex; gap: 0.25rem;">
+                    <button class="btn-icon edit-log" style="font-size: 0.8rem; opacity: 0.6;" title="Edit">✏️</button>
+                    <button class="btn-icon delete-log" style="font-size: 0.8rem; opacity: 0.6; color: #ff5555;" title="Delete">🗑️</button>
+                </div>
+            `;
+
+            item.querySelector('.edit-log').addEventListener('click', () => editGoalLog(l));
+            item.querySelector('.delete-log').addEventListener('click', () => deleteGoalLog(l));
+
+            goalHistoryList.appendChild(item);
+        });
+    }
+
+    async function editWeightLog(log) {
+        const newValue = prompt('Enter new weight:', log.value);
+        if (newValue === null) return;
+        const newDate = prompt('Enter date (YYYY-MM-DD):', log.date.includes('T') ? log.date.split('T')[0] : log.date);
+        if (newDate === null) return;
+
+        const success = await database.updateWeightLog(log.id, { value: newValue, date: newDate });
+        if (success) {
+            showNotification('Updated', 'Weight log updated.', '✅');
+            renderWeightHistory();
+        }
+    }
+
+    async function deleteWeightLog(log) {
+        showConfirmation('Delete this weight log?', async () => {
+            const success = await database.deleteWeightLog(log.id);
+            if (success) {
+                showNotification('Deleted', 'Weight log removed.', '🗑️');
+                renderWeightHistory();
+            }
+        });
+    }
+
+    async function editGoalLog(log) {
+        const newValue = prompt('Enter new goal:', log.value);
+        if (newValue === null) return;
+        const newDate = prompt('Enter date (YYYY-MM-DD):', log.date.includes('T') ? log.date.split('T')[0] : log.date);
+        if (newDate === null) return;
+
+        const success = await database.updateGoalLog(log.id, { value: newValue, date: newDate });
+        if (success) {
+            showNotification('Updated', 'Goal log updated.', '✅');
+            renderGoalHistory();
+        }
+    }
+
+    async function deleteGoalLog(log) {
+        showConfirmation('Delete this goal log?', async () => {
+            const success = await database.deleteGoalLog(log.id);
+            if (success) {
+                showNotification('Deleted', 'Goal log removed.', '🗑️');
+                renderGoalHistory();
+            }
+        });
+    }
+
+    if (weightHistoryBtn) {
+        weightHistoryBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            weightHistoryList.classList.toggle('hidden');
+            if (!weightHistoryList.classList.contains('hidden')) {
+                renderWeightHistory();
+            }
+        });
+    }
+
+    if (goalHistoryBtn) {
+        goalHistoryBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            goalHistoryList.classList.toggle('hidden');
+            if (!goalHistoryList.classList.contains('hidden')) {
+                renderGoalHistory();
+            }
+        });
+    }
 
     // --- Theme ---
     const themeBtns = document.querySelectorAll('.theme-btn');
@@ -473,17 +799,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const logDurationHoursInput = document.getElementById('challenge-log-duration-hours');
     const logDurationMinutesInput = document.getElementById('challenge-log-duration-minutes');
 
+    // Optional Inputs
+    const logCadenceInput = document.getElementById('log-cadence');
+    const logSpeedInput = document.getElementById('log-speed');
+    const logResistanceInput = document.getElementById('log-resistance');
+    const logElevationInput = document.getElementById('log-elevation');
+    const logPaceInput = document.getElementById('log-pace');
+    const logNotesInput = document.getElementById('log-notes');
+
 
 
     // Set today's date as default
     function setTodayDate() {
-        if (logDateInput) {
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            logDateInput.value = `${yyyy}-${mm}-${dd}`;
-        }
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const todayStr = `${yyyy}-${mm}-${dd}`;
+
+        if (logDateInput) logDateInput.value = todayStr;
+        if (profileWeightDateInput) profileWeightDateInput.value = todayStr;
+        if (profileGoalDateInput) profileGoalDateInput.value = todayStr;
     }
     // Initialize with today's date
     setTodayDate();
@@ -508,6 +844,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const kjValue = parseFloat(logKjInput.value) || null;
         const milesValue = parseFloat(logMilesInput.value) || null;
 
+        // Capture Optional Values
+        const cadence = logCadenceInput ? (parseFloat(logCadenceInput.value) || null) : null;
+        const speed = logSpeedInput ? (parseFloat(logSpeedInput.value) || null) : null;
+        const resistance = logResistanceInput ? (parseFloat(logResistanceInput.value) || null) : null;
+        const elevation = logElevationInput ? (parseFloat(logElevationInput.value) || null) : null;
+        const pace = logPaceInput ? logPaceInput.value.trim() : null;
+        const notes = logNotesInput ? logNotesInput.value.trim() : null;
+
 
 
         // HTML5 date input provides yyyy-mm-dd format
@@ -528,6 +872,7 @@ document.addEventListener('DOMContentLoaded', () => {
             type, date, duration: durationInput, title: desc, outputKj: kjValue, miles: milesValue,
             output: kjValue || milesValue,
             metricType: kjValue ? 'output' : 'miles',
+            cadence, speed, resistance, elevation, pace, notes, // Add new fields
             id: tempId // Use temp ID initially
         };
         console.log('DEBUG: Logging Workout with temp ID:', tempId, newWorkout);
@@ -569,6 +914,14 @@ document.addEventListener('DOMContentLoaded', () => {
         logMilesInput.value = '';
         if (logDurationHoursInput) logDurationHoursInput.value = '';
         if (logDurationMinutesInput) logDurationMinutesInput.value = '';
+
+        // Clear Optional Inputs
+        if (logCadenceInput) logCadenceInput.value = '';
+        if (logSpeedInput) logSpeedInput.value = '';
+        if (logResistanceInput) logResistanceInput.value = '';
+        if (logElevationInput) logElevationInput.value = '';
+        if (logPaceInput) logPaceInput.value = '';
+        if (logNotesInput) logNotesInput.value = '';
         setTodayDate();
     }
     if (logBtn) logBtn.addEventListener('click', () => {
@@ -781,9 +1134,21 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Sort workouts desc
-        // (If DB query ordered them, great, otherwise client sort)
-        // appData.workouts.sort((a,b) => new Date(b.date) - new Date(a.date)); 
+        // Defensive check
+        if (!Array.isArray(appData.workouts)) {
+            appData.workouts = [];
+        }
+
+        // Sort workouts descending by date (Safe Sort)
+        try {
+            appData.workouts.sort((a, b) => {
+                const dateA = a.date ? new Date(a.date) : new Date(0);
+                const dateB = b.date ? new Date(b.date) : new Date(0);
+                return dateB - dateA;
+            });
+        } catch (e) {
+            console.error('Error sorting workouts:', e);
+        }
 
         const recentLogs = [];
         const historyLogs = [];
@@ -1273,33 +1638,83 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!container) return;
 
         const totals = calculateTotalProgress();
-        // (Simplified facts logic - reusing previous arrays if defined globally or re-define)
-        // Re-defining briefly for safety or assume global scope if not replaced? 
-        // Access previous arrays? Arrays were defined inside DOMContentLoaded in previous file...
-        // Need to redefine them here.
+
+        // Elevation Milestones (Meters)
         const climbingFacts = [
             { threshold: 0, comparison: "Start climbing!" },
             { threshold: 324, comparison: "Eiffel Tower 🗼" },
-            { threshold: 8849, comparison: "Mt. Everest 🧗" }
+            { threshold: 828, comparison: "Burj Khalifa 🏙️" },
+            { threshold: 1200, comparison: "Grand Canyon Depth 🏜️" },
+            { threshold: 1600, comparison: "Mile High ☁️" },
+            { threshold: 2228, comparison: "Mt. Kosciuszko (Australia) 🇦🇺" },
+            { threshold: 3776, comparison: "Mt. Fuji 🗻" },
+            { threshold: 4807, comparison: "Mont Blanc 🏔️" },
+            { threshold: 5895, comparison: "Mt. Kilimanjaro 🦒" },
+            { threshold: 6190, comparison: "Denali 🦅" },
+            { threshold: 6961, comparison: "Aconcagua ⛰️" },
+            { threshold: 8849, comparison: "Mt. Everest 🧗" },
+            { threshold: 17698, comparison: "2x Mt. Everest ✌️" },
+            { threshold: 26547, comparison: "3x Mt. Everest 🤯" },
+            { threshold: 100000, comparison: "Space (Kármán line) 🚀" }
         ];
-        // ... (Full list usually better, keeping it short for this replacement block or copy all)
 
-        const fact = climbingFacts.find(f => totals.climbingMeters < f.threshold) || climbingFacts[climbingFacts.length - 1];
+        // Distance Milestones (Kilometers)
+        const distanceFacts = [
+            { threshold: 0, comparison: "Start moving!" },
+            { threshold: 42.195, comparison: "Marathon 🏃" },
+            { threshold: 100, comparison: "Ultra Marathon 👟" },
+            { threshold: 346, comparison: "London to Paris 🚄" },
+            { threshold: 804, comparison: "The Proclaimers (500mi) 🎤" },
+            { threshold: 1400, comparison: "Length of UK (Land's End to John o' Groats) 🇬🇧" },
+            { threshold: 2350, comparison: "Great Barrier Reef 🐠" },
+            { threshold: 3755, comparison: "Tour de France (approx) 🚴" },
+            { threshold: 3940, comparison: "Route 66 🇺🇸" },
+            { threshold: 6400, comparison: "Amazon River 🐍" },
+            { threshold: 10000, comparison: "Great Wall of China 🧱" },
+            { threshold: 12742, comparison: "Diameter of Earth 🌍" },
+            { threshold: 40075, comparison: "Circumference of Earth ✈️" },
+            { threshold: 384400, comparison: "Distance to Moon 🌚" }
+        ];
+
+        // Find the highest threshold reached
+        // We reverse the array to find the first match from largest to smallest, or just find the last one that satisfies condition
+        let climbFact = climbingFacts[0];
+        for (let i = climbingFacts.length - 1; i >= 0; i--) {
+            if (totals.climbingMeters >= climbingFacts[i].threshold) {
+                climbFact = climbingFacts[i];
+                break;
+            }
+        }
+
+        let distFact = distanceFacts[0];
+        for (let i = distanceFacts.length - 1; i >= 0; i--) {
+            if (totals.distanceKm >= distanceFacts[i].threshold) {
+                distFact = distanceFacts[i];
+                break;
+            }
+        }
 
         container.innerHTML = `
             <div class="fact-card">
                 <div class="fact-icon">🏔️</div>
                 <div class="fact-content">
                     <div class="fact-label">Total Elevation</div>
-                    <div class="fact-value">${totals.climbingMeters.toFixed(0)}m</div>
-                    <div class="fact-comparison">Total climbed</div>
+                    <div class="fact-value">
+                        <div>${totals.climbingMeters.toLocaleString(undefined, { maximumFractionDigits: 0 })} m</div>
+                        <div>${totals.climbingFeet.toLocaleString(undefined, { maximumFractionDigits: 0 })} ft</div>
+                    </div>
+                    <div class="fact-comparison">Equivalent to ${climbFact.comparison}</div>
                 </div>
             </div>
              <div class="fact-card">
                 <div class="fact-icon">🚴</div>
                 <div class="fact-content">
                     <div class="fact-label">Total Distance</div>
-                    <div class="fact-value">${totals.distanceKm.toFixed(1)}km</div>
+                    <div class="fact-value">
+                        <div>${totals.distanceKm.toLocaleString(undefined, { maximumFractionDigits: 1 })} km</div>
+                        <div>${totals.distanceMiles.toLocaleString(undefined, { maximumFractionDigits: 1 })} mi</div>
+                    </div>
+                    <div class="fact-comparison">Equivalent to ${distFact.comparison}</div>
                 </div>
             </div>
         `;
@@ -1379,7 +1794,12 @@ document.addEventListener('DOMContentLoaded', () => {
                      <button class="circle-remove-btn" data-id="${c.instanceId}">x</button>
                      <div class="circle-title">${c.title}</div>
                      <div class="circle-percent">${Math.min(percentage, 100).toFixed(1)}%</div>
-                     <div class="circle-stats">${c.type === 'climbing' ? `${c.progress.toFixed(0)}m / ${c.height}m (${(c.progress * 3.28084).toFixed(0)}ft / ${(c.height * 3.28084).toFixed(0)}ft)` : `${c.progress.toFixed(1)}km / ${c.distance}km (${(c.progress * 0.621371).toFixed(1)}mi / ${(c.distance * 0.621371).toFixed(1)}mi)`}</div>
+                     <div class="circle-stats">
+                        ${c.type === 'climbing'
+                    ? `<div>${c.progress.toFixed(0)}m / ${c.height}m</div><div>${(c.progress * 3.28084).toFixed(0)}ft / ${(c.height * 3.28084).toFixed(0)}ft</div>`
+                    : `<div>${c.progress.toFixed(1)}km / ${c.distance}km</div><div>${(c.progress * 0.621371).toFixed(1)}mi / ${(c.distance * 0.621371).toFixed(1)}mi</div>`
+                }
+                     </div>
                      
                      <!-- New Stats: Duration and Calories -->
                      ${(() => {
@@ -1438,7 +1858,17 @@ document.addEventListener('DOMContentLoaded', () => {
             workoutDropdown.style.overflowY = 'auto';
 
             // Get workouts for this challenge
-            const contributions = c.contributions || [];
+            let contributions = c.contributions || [];
+
+            // Sort contributions by workout date desc
+            contributions.sort((a, b) => {
+                const wA = appData.workouts.find(w => w.id === a.workoutId);
+                const wB = appData.workouts.find(w => w.id === b.workoutId);
+                const dateA = wA ? new Date(wA.date) : new Date(0);
+                const dateB = wB ? new Date(wB.date) : new Date(0);
+                return dateB - dateA;
+            });
+
             if (contributions.length === 0) {
                 workoutDropdown.innerHTML = '<p style="color: #888; font-style: italic; text-align: center; margin: 0;">No workouts added yet</p>';
             } else {
@@ -1454,6 +1884,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         workoutItem.style.background = 'rgba(255,255,255,0.03)';
                         workoutItem.style.borderRadius = '4px';
                         workoutItem.style.borderLeft = '3px solid var(--primary-color)';
+                        workoutItem.style.cursor = 'pointer'; // Make clickable
 
                         const contributionDisplay = c.type === 'climbing'
                             ? `${contrib.amount.toFixed(0)}m`
@@ -1463,13 +1894,20 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div style="flex: 1;">
                                     <div style="font-weight: 600; font-size: 0.9rem;">${workout.title}</div>
-                                    <div style="font-size: 0.75rem; color: #aaa;">${workout.date}</div>
+                                    <div style="font-size: 0.75rem; color: #aaa;">${formatDateForDisplay(workout.date)}</div>
                                 </div>
                                 <div style="text-align: right; font-size: 0.85rem; color: var(--primary-color); font-weight: 600;">
                                     +${contributionDisplay}
                                 </div>
                             </div>
                         `;
+
+                        // Attach click listener
+                        workoutItem.addEventListener('click', (e) => {
+                            e.stopPropagation(); // Prevent bubbling if needed
+                            showWorkoutDetailsModal(workout);
+                        });
+
                         workoutList.appendChild(workoutItem);
                     }
                 });

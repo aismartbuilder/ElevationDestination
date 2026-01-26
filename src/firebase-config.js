@@ -6,15 +6,15 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.1.0/firebas
 import { getAuth } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js';
 import { getFirestore } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js';
 
-// Firebase project credentials - elevationdestination2026-dev (New Web App)
+// Firebase project credentials - dynamically loaded via Vite environment variables
 const firebaseConfig = {
-    apiKey: "AIzaSyCa6LwBY2Xt2uBsW7vZCCXdmCs5uEDbWUY",
-    authDomain: "elevationdestination2026-dev.firebaseapp.com",
-    projectId: "elevationdestination2026-dev",
-    storageBucket: "elevationdestination2026-dev.firebasestorage.app",
-    messagingSenderId: "702046665920",
-    appId: "1:702046665920:web:72b2ff9371d691e20e4125",
-    measurementId: "G-R2QC1YRTJL"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
