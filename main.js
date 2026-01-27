@@ -364,31 +364,44 @@ document.addEventListener('DOMContentLoaded', () => {
     // LoginForm
     document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
         const user = document.getElementById('login-username').value;
         const pass = document.getElementById('login-password').value;
         const remember = document.getElementById('login-remember').checked;
 
-        const success = await auth.login(user, pass, remember);
-        if (success) {
-            if (remember) {
-                localStorage.setItem('saved_email', user);
-            } else {
-                localStorage.removeItem('saved_email');
+        if (btn) btn.classList.add('loading');
+
+        try {
+            const success = await auth.login(user, pass, remember);
+            if (success) {
+                if (remember) {
+                    localStorage.setItem('saved_email', user);
+                } else {
+                    localStorage.removeItem('saved_email');
+                }
+                e.target.reset();
             }
-            // Clearing form handled by reload/switch?
-            e.target.reset();
+        } finally {
+            if (btn) btn.classList.remove('loading');
         }
     });
 
     document.getElementById('signup-form').addEventListener('submit', async (e) => {
         e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
         const name = document.getElementById('signup-name').value;
         const email = document.getElementById('signup-email').value;
         const user = document.getElementById('signup-username').value;
         const pass = document.getElementById('signup-password').value;
 
-        const success = await auth.signup(name, email, user, pass);
-        if (success) e.target.reset();
+        if (btn) btn.classList.add('loading');
+
+        try {
+            const success = await auth.signup(name, email, user, pass);
+            if (success) e.target.reset();
+        } finally {
+            if (btn) btn.classList.remove('loading');
+        }
     });
 
 
@@ -415,6 +428,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         settingsDropdown.addEventListener('click', (e) => e.stopPropagation());
+
+        const closeSettingsBtn = document.getElementById('close-settings-btn');
+        if (closeSettingsBtn) {
+            closeSettingsBtn.addEventListener('click', () => {
+                settingsDropdown.classList.add('hidden');
+            });
+        }
     }
 
     if (logoutBtn) {
@@ -1552,7 +1572,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const text = `I just crushed the ${challenge.title} challenge on Elevation|Destination! 🏔️🚴 #ElevationDestination #FitnessGoals`;
+        const text = `I just crushed the ${challenge.title} challenge on ElevationDestination! 🏔️🚴 #ElevationDestination #FitnessGoals`;
 
         // 1. Try Native Share (Mobile/Supported)
         if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {

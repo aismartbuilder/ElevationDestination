@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Elevation|Destination</title>
+  <title>ElevationDestination</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -20,8 +20,8 @@
   <!-- LANDING PAGE -->
   <div id="landing-view" class="view-section">
     <div class="hero">
-      <h1>Elevation|Destination</h1>
-      <p>Turn Sweat into Summits. Convert your workouts to real-world achievements.</p>
+      <h1>ElevationDestination</h1>
+      <p>Turn Sweat into Summits.</p>
       <div class="cta-group">
         <button id="landing-signup-btn" class="btn btn-primary">Start your Summit</button>
         <button id="landing-login-btn" class="btn btn-secondary">Login</button>
@@ -98,11 +98,10 @@
   <!-- MAIN APP -->
   <div id="app-view" class="view-section hidden">
     <header>
-      <div class="header-top"
-        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <div class="header-top">
         <div class="brand">
-          <h1>Elevation|Destination</h1>
-          <p>Turn Sweat into Summits. Convert your workouts to real-world achievements.</p>
+          <h1>ElevationDestination</h1>
+          <p class="brand-tagline">Turn Sweat into Summits.</p>
         </div>
 
         <div class="user-controls">
@@ -113,7 +112,10 @@
 
           <!-- Settings Dropdown -->
           <div id="settings-dropdown" class="settings-dropdown hidden">
-            <h3>Your Settings</h3>
+            <div class="settings-header">
+              <h3>Your Settings</h3>
+              <button id="close-settings-btn" class="close-btn">&times;</button>
+            </div>
 
             <div class="input-group">
               <div class="label-row">
@@ -235,7 +237,10 @@
               </div>
               <div class="form-row" style="gap: 0.5rem;">
                 <div class="input-group" style="flex: 1; margin: 0;">
-                  <label for="challenge-log-kj" style="font-size: 0.85rem; margin-bottom: 0.25rem;">kJ Output</label>
+                  <label for="challenge-log-kj"
+                    style="font-size: 0.85rem; margin-bottom: 0.25rem; display: flex; align-items: center;">kJ Output
+                    <span class="info-tooltip">ⓘ<span class="tooltip-bubble">Est: Avg Watts × Hours × 3.6. Or check your
+                        bike computer/app.</span></span></label>
                   <input type="number" id="challenge-log-kj" placeholder="Enter kJ" class="manual-input">
                 </div>
                 <div class="input-group" style="flex: 1; margin: 0;">
