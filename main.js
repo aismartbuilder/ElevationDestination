@@ -29,10 +29,12 @@ const DEFAULT_CHALLENGES = [
     { id: 'marathon', title: 'Marathon', distance: 42.195, type: 'distance' },
     { id: 'ultra', title: 'Ultra Marathon', distance: 100, type: 'distance' },
     { id: 'half-marathon', title: 'Half Marathon', distance: 21.0975, type: 'distance' },
+    { id: 'la-sf', title: 'LA to SF', distance: 617, type: 'distance' },
     { id: 'century', title: 'Century Ride', distance: 160.9, type: 'distance' },
     { id: 'london-paris', title: 'London to Paris', distance: 460, type: 'distance' },
     { id: 'proclaimers', title: 'The Proclaimers', distance: 804.67, type: 'distance' },
-    { id: 'dia-de-los-muertos', title: 'Dia de los Muertos', distance: 158, type: 'distance' }
+    { id: 'dia-de-los-muertos', title: 'Dia de los Muertos', distance: 158, type: 'distance' },
+    { id: 'la-ny', title: 'LA to NY', distance: 4828, type: 'distance' }
 ];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1634,6 +1636,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let totalClimb = 0;
         let totalDist = 0;
+        let cyclingDist = 0;
+        let runningDist = 0;
 
         appData.workouts.forEach(w => {
             // Climbing
@@ -1641,15 +1645,24 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (w.metricType !== 'miles' && w.output) totalClimb += calculateElevation(w.output, weight).meters;
 
             // Distance
-            if (w.miles) totalDist += (w.miles * 1.60934);
-            else if (w.metricType === 'miles') totalDist += (w.output * 1.60934);
+            let distKm = 0;
+            if (w.miles) distKm = (w.miles * 1.60934);
+            else if (w.metricType === 'miles') distKm = (w.output * 1.60934);
+
+            totalDist += distKm;
+            if (w.type === 'bike') cyclingDist += distKm;
+            if (['run', 'walk', 'hike'].includes(w.type)) runningDist += distKm;
         });
 
         return {
             climbingMeters: totalClimb,
             climbingFeet: totalClimb * 3.28084,
             distanceKm: totalDist,
-            distanceMiles: totalDist * 0.621371
+            distanceMiles: totalDist * 0.621371,
+            cyclingDistanceKm: cyclingDist,
+            cyclingDistanceMiles: cyclingDist * 0.621371,
+            runningDistanceKm: runningDist,
+            runningDistanceMiles: runningDist * 0.621371
         };
     }
 
@@ -1696,6 +1709,22 @@ document.addEventListener('DOMContentLoaded', () => {
             { threshold: 384400, comparison: "Distance to Moon 🌚" }
         ];
 
+        // Celestial Elevation Milestones (Meters)
+        const MOON_DISTANCE = 384400000; // Average distance to Moon in meters
+        const SUN_DISTANCE = 149600000000; // Average distance to Sun in meters
+
+        let celestialTarget = MOON_DISTANCE;
+        let celestialLabel = "the Moon 🌙";
+        let celestialIcon = "🌙";
+
+        if (totals.climbingMeters >= MOON_DISTANCE) {
+            celestialTarget = SUN_DISTANCE;
+            celestialLabel = "the Sun ☀️";
+            celestialIcon = "☀️";
+        }
+
+        const celestialPercent = (totals.climbingMeters / celestialTarget) * 100;
+
         // Find the highest threshold reached
         // We reverse the array to find the first match from largest to smallest, or just find the last one that satisfies condition
         let climbFact = climbingFacts[0];
@@ -1714,27 +1743,126 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        const WORLD_CIRCUMFERENCE = 40075;
+        const MOON_DISTANCE_KM = 384400;
+        const worldMilesTarget = WORLD_CIRCUMFERENCE * 0.621371;
+
+        let worldContent = "";
+        if (totals.cyclingDistanceKm < MOON_DISTANCE_KM) {
+            const worldPercent = (totals.cyclingDistanceKm / WORLD_CIRCUMFERENCE) * 100;
+            worldContent = `
+                <div class="fact-label">Around the World</div>
+                <div class="fact-value">
+                    <div>${worldPercent.toFixed(2)}%</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                        ${totals.cyclingDistanceKm.toLocaleString(undefined, { maximumFractionDigits: 1 })} km / 
+                        ${totals.cyclingDistanceMiles.toLocaleString(undefined, { maximumFractionDigits: 1 })} mi
+                    </div>
+                </div>
+                <div class="fact-comparison">Total Cycling Distance</div>
+                <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 0.5rem; overflow: hidden;">
+                    <div style="width: ${Math.min(worldPercent, 100)}%; height: 100%; background: #4ecdc4;"></div>
+                </div>
+                <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem;">
+                    Target: ${WORLD_CIRCUMFERENCE.toLocaleString()} km / ${worldMilesTarget.toLocaleString(undefined, { maximumFractionDigits: 0 })} mi
+                </div>
+            `;
+        } else {
+            const worldTrips = totals.cyclingDistanceKm / WORLD_CIRCUMFERENCE;
+            worldContent = `
+                <div class="fact-label">Around the World</div>
+                <div class="fact-value">
+                    <div>${worldTrips.toFixed(1)}x</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                        ${totals.cyclingDistanceKm.toLocaleString(undefined, { maximumFractionDigits: 1 })} km / 
+                        ${totals.cyclingDistanceMiles.toLocaleString(undefined, { maximumFractionDigits: 1 })} mi
+                    </div>
+                </div>
+                <div class="fact-comparison">Times Around the Earth! 🌍</div>
+                <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 0.5rem; overflow: hidden;">
+                    <div style="width: 100%; height: 100%; background: #ff6b6b; animation: pulse 2s infinite;"></div>
+                </div>
+                <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem;">
+                    Lap Progress: ${(totals.cyclingDistanceKm % WORLD_CIRCUMFERENCE).toLocaleString(undefined, { maximumFractionDigits: 1 })} / ${WORLD_CIRCUMFERENCE.toLocaleString()} km
+                </div>
+            `;
+        }
+
+        const POLAR_DISTANCE = 20004; // North Pole to Antarctica approx
+        const polarMilesTarget = POLAR_DISTANCE * 0.621371;
+        let polarContent = "";
+
+        if (totals.runningDistanceKm < POLAR_DISTANCE) {
+            const polarPercent = (totals.runningDistanceKm / POLAR_DISTANCE) * 100;
+            polarContent = `
+                <div class="fact-label">North Pole to Antarctica</div>
+                <div class="fact-value">
+                    <div>${polarPercent.toFixed(2)}%</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                        ${totals.runningDistanceKm.toLocaleString(undefined, { maximumFractionDigits: 1 })} km / 
+                        ${totals.runningDistanceMiles.toLocaleString(undefined, { maximumFractionDigits: 1 })} mi
+                    </div>
+                </div>
+                <div class="fact-comparison">Running/Walking Progress</div>
+                <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 0.5rem; overflow: hidden;">
+                    <div style="width: ${Math.min(polarPercent, 100)}%; height: 100%; background: #a29bfe;"></div>
+                </div>
+                <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem;">
+                    Target: ${POLAR_DISTANCE.toLocaleString()} km / ${polarMilesTarget.toLocaleString(undefined, { maximumFractionDigits: 0 })} mi
+                </div>
+            `;
+        } else {
+            const polarTrips = totals.runningDistanceKm / POLAR_DISTANCE;
+            polarContent = `
+                <div class="fact-label">North Pole to Antarctica</div>
+                <div class="fact-value">
+                    <div>${polarTrips.toFixed(1)}x</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                        ${totals.runningDistanceKm.toLocaleString(undefined, { maximumFractionDigits: 1 })} km / 
+                        ${totals.runningDistanceMiles.toLocaleString(undefined, { maximumFractionDigits: 1 })} mi
+                    </div>
+                </div>
+                <div class="fact-comparison">Times Traveled North to South! ❄️</div>
+                <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 0.5rem; overflow: hidden;">
+                    <div style="width: 100%; height: 100%; background: #6c5ce7; animation: pulse 2s infinite;"></div>
+                </div>
+                <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem;">
+                    Lap Progress: ${(totals.runningDistanceKm % POLAR_DISTANCE).toLocaleString(undefined, { maximumFractionDigits: 1 })} / ${POLAR_DISTANCE.toLocaleString()} km
+                </div>
+            `;
+        }
+
         container.innerHTML = `
             <div class="fact-card">
-                <div class="fact-icon">🏔️</div>
+                <div class="fact-icon">🌍</div>
                 <div class="fact-content">
-                    <div class="fact-label">Total Elevation</div>
-                    <div class="fact-value">
-                        <div>${totals.climbingMeters.toLocaleString(undefined, { maximumFractionDigits: 0 })} m</div>
-                        <div>${totals.climbingFeet.toLocaleString(undefined, { maximumFractionDigits: 0 })} ft</div>
-                    </div>
-                    <div class="fact-comparison">Equivalent to ${climbFact.comparison}</div>
+                    ${worldContent}
                 </div>
             </div>
-             <div class="fact-card">
-                <div class="fact-icon">🚴</div>
+            <div class="fact-card">
+                <div class="fact-icon">❄️</div>
                 <div class="fact-content">
-                    <div class="fact-label">Total Distance</div>
+                    ${polarContent}
+                </div>
+            </div>
+            <div class="fact-card">
+                <div class="fact-icon">${celestialIcon}</div>
+                <div class="fact-content">
+                    <div class="fact-label">Way to ${celestialLabel}</div>
                     <div class="fact-value">
-                        <div>${totals.distanceKm.toLocaleString(undefined, { maximumFractionDigits: 1 })} km</div>
-                        <div>${totals.distanceMiles.toLocaleString(undefined, { maximumFractionDigits: 1 })} mi</div>
+                        <div>${celestialPercent < 0.0001 ? "0.0000" : celestialPercent.toFixed(4)}%</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                            ${totals.climbingMeters.toLocaleString(undefined, { maximumFractionDigits: 0 })} m / 
+                            ${totals.climbingFeet.toLocaleString(undefined, { maximumFractionDigits: 0 })} ft
+                        </div>
                     </div>
-                    <div class="fact-comparison">Equivalent to ${distFact.comparison}</div>
+                    <div class="fact-comparison">Total Elevation Distance</div>
+                    <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 0.5rem; overflow: hidden;">
+                        <div style="width: ${Math.min(celestialPercent, 100)}%; height: 100%; background: var(--primary-color);"></div>
+                    </div>
+                    <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem;">
+                        Target: ${celestialTarget.toLocaleString()} m / ${(celestialTarget * 3.28084).toLocaleString(undefined, { maximumFractionDigits: 0 })} ft
+                    </div>
                 </div>
             </div>
         `;
@@ -2163,11 +2291,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const allDistance = [...defaults.filter(x => x.type === 'distance'), ...appData.challenges.distance];
 
             // Define which challenges get which icon
-            const runningChallenges = ['marathon', 'ultra', 'half-marathon'];
-            const bikingChallenges = ['century', 'london-paris', 'proclaimers', 'dia-de-los-muertos'];
+            const runningChallenges = ['marathon', 'ultra', 'half-marathon', 'la-sf'];
+            const bikingChallenges = ['century', 'london-paris', 'proclaimers', 'dia-de-los-muertos', 'la-ny'];
 
             allDistance
-                .sort((a, b) => a.distance - b.distance)
+                .sort((a, b) => {
+                    const aIsBiking = bikingChallenges.includes(a.id);
+                    const bIsBiking = bikingChallenges.includes(b.id);
+                    const aIsRunning = runningChallenges.includes(a.id);
+                    const bIsRunning = runningChallenges.includes(b.id);
+
+                    // Sort order: Biking, Running, Others
+                    let aOrder = 3;
+                    if (aIsBiking) aOrder = 1;
+                    else if (aIsRunning) aOrder = 2;
+
+                    let bOrder = 3;
+                    if (bIsBiking) bOrder = 1;
+                    else if (bIsRunning) bOrder = 2;
+
+                    if (aOrder !== bOrder) return aOrder - bOrder;
+                    return a.distance - b.distance; // Then by distance
+                })
                 .forEach(c => {
                     try {
                         // Determine icon based on challenge ID

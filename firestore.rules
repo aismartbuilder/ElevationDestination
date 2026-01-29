@@ -1,0 +1,36 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper to check if the user is authenticated and matches the requested resource
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+      
+      match /workouts/{workoutId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      match /app_data/{dataId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      match /weight_history/{logId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      match /goal_history/{logId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+    
+    // Default deny for all other paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

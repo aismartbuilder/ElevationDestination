@@ -7,8 +7,8 @@
     "dev": "vite",
     "build:elevationdestination-dev": "vite build --mode development",
     "build:elevationdestination": "vite build --mode production",
-    "deploy:elevationdestination-dev": "firebase deploy --only hosting:dev -P elevationdestination-dev",
-    "deploy:elevationdestination": "firebase deploy --only hosting:prod -P elevationdestination",
+    "deploy:elevationdestination-dev": "npm run build:elevationdestination-dev && firebase deploy --only hosting:dev,firestore,storage -P elevationdestination-dev",
+    "deploy:elevationdestination": "npm run build:elevationdestination && firebase deploy --only hosting:prod,firestore,storage -P elevationdestination",
     "preview": "vite preview"
   },
   "devDependencies": {

@@ -1,0 +1,14 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      // Default safety: deny all. Update this if you start using Storage.
+      // Example for user-specific storage:
+      // match /users/{userId}/{allPaths=**} {
+      //   allow read, write: if request.auth != null && request.auth.uid == userId;
+      // }
+      allow read, write: if false;
+    }
+  }
+}
