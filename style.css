@@ -728,20 +728,18 @@ footer {
 
 /* Achievement Facts */
 .facts-grid {
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 1rem;
-  justify-content: flex-start;
+  justify-content: center;
   width: 100%;
-  overflow-x: auto;
   padding: 0.5rem 0;
 }
 
 @media (max-width: 1024px) {
   .facts-grid {
-    flex-wrap: wrap !important;
-    justify-content: center !important;
+    justify-content: center;
   }
 }
 
