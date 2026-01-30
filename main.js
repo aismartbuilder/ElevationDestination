@@ -140,8 +140,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let calories = workout.calories;
         if (!calories) {
             if (workout.outputKj) {
-                // 1 kJ work ~= 1 kcal burned (roughly 20-25% efficiency)
-                calories = parseFloat(workout.outputKj);
+                // 1 kcal ~ 4.184 kJ
+                calories = (parseFloat(workout.outputKj) / 4.184).toFixed(0);
             } else if (workout.miles) {
                 // Rough estimate: 100 kcal / mile (running) or 40-50 / mile (cycling)
                 // Defaulting to "Generic Cardio" ~100kcal/10 mins or based on miles
@@ -928,6 +928,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const logHrInput = document.getElementById('log-hr');
     const logIntensityInput = document.getElementById('log-intensity');
 
+    // --- Calories to KJ Auto-Conversion ---
+    if (logCaloriesInput && logKjInput) {
+        logCaloriesInput.addEventListener('input', () => {
+            const kcal = parseFloat(logCaloriesInput.value);
+            if (!isNaN(kcal)) {
+                logKjInput.value = Math.round(kcal * 4.184);
+            } else {
+                logKjInput.value = '';
+            }
+        });
+
+        logKjInput.addEventListener('input', () => {
+            const kj = parseFloat(logKjInput.value);
+            if (!isNaN(kj)) {
+                logCaloriesInput.value = Math.round(kj / 4.184);
+            } else {
+                logCaloriesInput.value = '';
+            }
+        });
+    }
+
 
 
     // Set today's date as default
@@ -1164,9 +1185,9 @@ document.addEventListener('DOMContentLoaded', () => {
             let estimatedCal = calories;
             let estimatedKj = kjValue;
 
-            // 1. Cross-fill if one exists
-            if (estimatedKj && !estimatedCal) estimatedCal = estimatedKj;
-            else if (estimatedCal && !estimatedKj) estimatedKj = estimatedCal;
+            // 1. Cross-fill if one exists (using 4.184 factor)
+            if (estimatedKj && !estimatedCal) estimatedCal = Math.round(estimatedKj / 4.184);
+            else if (estimatedCal && !estimatedKj) estimatedKj = Math.round(estimatedCal * 4.184);
 
             // 2. Calculate if both missing
             else if (!estimatedKj && !estimatedCal) {
@@ -2669,7 +2690,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 // 1 kJ ~= 1 kcal (Cycling mechanical work roughly equals metabolic cost in kcal)
                                 // Run/Walk: ~100 kcal per mile (gross approx)
                                 if (w.outputKj) {
-                                    totalCalories += parseFloat(w.outputKj);
+                                    totalCalories += (parseFloat(w.outputKj) / 4.184);
                                 } else if (w.miles || (w.metricType === 'miles' && w.output)) {
                                     const dist = parseFloat(w.miles || w.output);
                                     totalCalories += (dist * 100);
@@ -3051,29 +3072,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Challenge Type Switching ---
-    const challengeTypeBtns = document.querySelectorAll('.challenge-type-btn');
-    const climbingSection = document.getElementById('climbing-challenges-section');
-    const distanceSection = document.getElementById('distance-challenges-section');
-
-    challengeTypeBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const type = btn.dataset.challengeType;
-
-            // Toggle Active Button
-            challengeTypeBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
-            // Toggle Sections
-            if (type === 'climbing') {
-                if (climbingSection) climbingSection.classList.remove('hidden');
-                if (distanceSection) distanceSection.classList.add('hidden');
-            } else {
-                if (climbingSection) climbingSection.classList.add('hidden');
-                if (distanceSection) distanceSection.classList.remove('hidden');
-            }
-        });
-    });
+    // --- Challenge Sections ---
+    // Both climbing and distance sections are now always visible in side-by-side dropdowns.
+    // We no longer need the challenge-type-btn switching logic.
 
     // --- Custom Challenge Logic ---
     // (Inputs for custom challenges)

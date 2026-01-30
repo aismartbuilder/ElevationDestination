@@ -10,7 +10,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <meta name="robots" content="noindex, nofollow">
 </head>
 
 <body>
@@ -24,7 +23,8 @@
       <h1>ElevationDestination</h1>
       <p>Turn Sweat into Summits.</p>
       <div class="cta-group">
-        <button id="landing-login-btn" class="btn btn-primary">Login</button>
+        <button id="landing-signup-btn" class="btn btn-primary">Start your Summit</button>
+        <button id="landing-login-btn" class="btn btn-secondary">Login</button>
       </div>
     </div>
     <div class="features">
@@ -62,8 +62,7 @@
         </div>
         <button type="submit" class="btn btn-primary">Log In</button>
       </form>
-      <!-- Sign up link removed for private access -->
-
+      <p>No account? <a href="#" id="to-signup-link">Sign Up</a></p>
       <button class="btn-text" id="login-back-btn">← Back</button>
     </div>
   </div>
@@ -239,188 +238,231 @@
 
       <!-- MY WORKOUTS TAB -->
       <div id="tab-myworkouts" class="tab-content active">
-        <div class="card" style="margin-top: 0;">
-          <h2>Workouts</h2>
-          <p>Log your activities and assign them to challenges.</p>
+        <div class="card workouts-dropdown-card" style="margin-top: 0; padding: 0;">
+          <details id="workouts-section-dropdown" open>
+            <summary class="workouts-summary">
+              <div class="summary-content">
+                <h2>Workouts</h2>
+                <p>Log your activities and assign them to challenges.</p>
+              </div>
+              <span class="dropdown-arrow">▼</span>
+            </summary>
 
-          <div class="workout-log-container" style="margin-top: 2rem;">
-            <!-- New Detailed Form -->
-            <div class="workout-log-form">
-              <div class="form-row">
-                <select id="challenge-log-type" class="manual-input">
-                  <option value="bike">🚴 Bike</option>
-                  <option value="run">🏃 Run</option>
-                  <option value="walk">🚶 Walk</option>
-                  <option value="hike">🥾 Hike</option>
-                  <option value="custom">✨ Custom</option>
-                </select>
-                <input type="text" id="challenge-log-custom-type" placeholder="Activity Name"
-                  class="manual-input hidden" style="flex: 1;">
-                <input type="date" id="challenge-log-date" class="manual-input">
-                <div style="display: flex; gap: 0.25rem; align-items: center;">
-                  <input type="number" id="challenge-log-duration-hours" class="manual-input" placeholder="Hrs" min="0"
-                    style="width: 4rem;">
-                  <input type="number" id="challenge-log-duration-minutes" class="manual-input" placeholder="Mins"
-                    min="0" max="59" style="width: 4rem;">
-                </div>
-              </div>
-              <div class="form-row">
-                <input type="text" id="challenge-log-desc" placeholder="Description (e.g. Morning 5K)"
-                  class="manual-input" style="flex: 1;">
-              </div>
-              <div class="form-row" style="gap: 0.5rem;">
-                <div class="input-group" style="flex: 1; margin: 0;">
-                  <label for="challenge-log-kj"
-                    style="font-size: 0.85rem; margin-bottom: 0.25rem; display: flex; align-items: center;">kJ Output
-                    <span class="info-tooltip">ⓘ<span class="tooltip-bubble">Est: Avg Watts × Hours × 3.6. Or check your
-                        bike computer/app.</span></span></label>
-                  <input type="number" id="challenge-log-kj" placeholder="Enter kJ" class="manual-input">
-                </div>
-                <div class="input-group" style="flex: 1; margin: 0;">
-                  <label for="challenge-log-miles" style="font-size: 0.85rem; margin-bottom: 0.25rem;">Miles</label>
-                  <input type="number" id="challenge-log-miles" placeholder="Enter miles" class="manual-input">
-                </div>
-              </div>
+            <div class="dropdown-body" style="padding: 2rem; padding-top: 1rem;">
 
-              <!-- Auto-Determine Checkbox -->
-              <div class="input-group checkbox-group" style="margin-top: 0.5rem; justify-content: flex-start;">
-                <input type="checkbox" id="auto-determine-energy">
-                <label for="auto-determine-energy" style="font-size: 0.9rem; margin-right: 0.5rem;">Determine my
-                  Calories and Kilojoules</label>
-                <div class="info-tooltip">
-                  <i>i</i>
-                  <div class="tooltip-bubble" style="width: 300px; right: auto; left: 0;">
-                    How your calories (kcal) and kilojoules (kJ) are estimated: <br><br>
-                    Using your Age, Gender, Weight, Height, Description of Activity, Duration, Intensity Level, and
-                    Heart Rate (Optional). <br><br>
-                    1 calories (kcal) ~ 4.184 kilojoules (kJ).
+              <div class="workout-log-container two-columns" style="margin-top: 2rem;">
+                <!-- Column 1: The Form -->
+                <div class="workout-log-column left">
+                  <div class="workout-log-form">
+                    <div class="workout-log-main">
+                      <div class="form-row main-fields">
+                        <div class="input-group" style="flex: 1;">
+                          <label for="challenge-log-type">Activity</label>
+                          <select id="challenge-log-type" class="manual-input">
+                            <option value="bike">🚴 Bike</option>
+                            <option value="run">🏃 Run</option>
+                            <option value="walk">🚶 Walk</option>
+                            <option value="hike">🥾 Hike</option>
+                            <option value="custom">✨ Custom</option>
+                          </select>
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                          <label for="challenge-log-date">Date</label>
+                          <input type="date" id="challenge-log-date" class="manual-input">
+                        </div>
+                      </div>
+
+                      <div class="form-row">
+                        <div class="input-group" style="flex: 1;">
+                          <label for="challenge-log-desc">Description</label>
+                          <input type="text" id="challenge-log-desc" placeholder="e.g. Morning 5K" class="manual-input">
+                        </div>
+                      </div>
+
+                      <input type="text" id="challenge-log-custom-type" placeholder="Activity Name"
+                        class="manual-input hidden" style="flex: 1; margin-bottom: 0.5rem;">
+
+                      <div class="form-row">
+                        <div class="input-group" style="flex: 1;">
+                          <label>Duration</label>
+                          <div style="display: flex; gap: 0.25rem; align-items: center;">
+                            <input type="number" id="challenge-log-duration-hours" class="manual-input"
+                              placeholder="Hrs" min="0" style="flex: 1;">
+                            <input type="number" id="challenge-log-duration-minutes" class="manual-input"
+                              placeholder="Mins" min="0" max="59" style="flex: 1;">
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="form-row" style="gap: 0.5rem;">
+                        <div class="input-group" style="flex: 1; margin: 0;">
+                          <label for="challenge-log-kj" style="display: flex; align-items: center;">kJ <span
+                              class="info-tooltip">ⓘ<span class="tooltip-bubble">Est: Avg Watts × Hours × 3.6. Or check
+                                your
+                                bike computer/app.</span></span></label>
+                          <input type="number" id="challenge-log-kj" placeholder="kJ" class="manual-input">
+                        </div>
+                        <div class="input-group" style="flex: 1; margin: 0;">
+                          <label for="challenge-log-miles">Miles</label>
+                          <input type="number" id="challenge-log-miles" placeholder="Miles" class="manual-input">
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Auto-Determine Checkbox -->
+                    <div class="input-group checkbox-group" style="margin-top: 0.5rem; justify-content: flex-start;">
+                      <input type="checkbox" id="auto-determine-energy">
+                      <label for="auto-determine-energy" style="font-size: 0.9rem; margin-right: 0.5rem;">Determine my
+                        Calories and Kilojoules</label>
+                      <div class="info-tooltip">
+                        <i>i</i>
+                        <div class="tooltip-bubble" style="width: 300px; right: auto; left: 0;">
+                          How your calories (kcal) and kilojoules (kJ) are estimated: <br><br>
+                          Using your Age, Gender, Weight, Height, Description of Activity, Duration, Intensity Level,
+                          and
+                          Heart Rate (Optional). <br><br>
+                          1 calories (kcal) ~ 4.184 kilojoules (kJ).
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Optional Detailed Stats -->
+                    <details id="details-container"
+                      style="margin-top: 1rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden;">
+                      <summary
+                        style="padding: 0.75rem; background: rgba(255,255,255,0.05); cursor: pointer; font-size: 0.9rem; user-select: none;">
+                        Optional Details (Speed, Cadence, Notes...)
+                      </summary>
+                      <div
+                        style="padding: 1rem; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 0.75rem;">
+
+                        <div class="form-row" style="gap: 0.5rem;">
+                          <div class="input-group" style="flex: 1; margin: 0;">
+                            <label for="log-cadence" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Avg Cadence
+                              (rpm)</label>
+                            <input type="number" id="log-cadence" placeholder="e.g. 85" class="manual-input">
+                          </div>
+                          <div class="input-group" style="flex: 1; margin: 0;">
+                            <label for="log-speed" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Avg Speed
+                              (mph)</label>
+                            <input type="number" id="log-speed" placeholder="e.g. 18" class="manual-input">
+                          </div>
+                        </div>
+
+                        <div class="form-row" style="gap: 0.5rem;">
+                          <div class="input-group" style="flex: 1; margin: 0;">
+                            <label for="log-resistance" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Avg
+                              Resistance
+                              (%)</label>
+                            <input type="number" id="log-resistance" placeholder="e.g. 45" class="manual-input">
+                          </div>
+                          <div class="input-group" style="flex: 1; margin: 0;">
+                            <label for="log-elevation" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Elevation
+                              (ft)</label>
+                            <input type="number" id="log-elevation" placeholder="e.g. 1200" class="manual-input">
+                          </div>
+                        </div>
+
+                        <div class="form-row" style="gap: 0.5rem;">
+                          <div class="input-group" style="flex: 1; margin: 0;">
+                            <label for="log-hr" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Avg Heart Rate
+                              (bpm)</label>
+                            <input type="number" id="log-hr" placeholder="e.g. 145" class="manual-input">
+                          </div>
+                          <div class="input-group" style="flex: 1; margin: 0;">
+                            <label for="log-intensity" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Intensity
+                              (0-10)</label>
+                            <input type="number" id="log-intensity" placeholder="10 = Max Effort" class="manual-input"
+                              min="0" max="10">
+                          </div>
+                        </div>
+
+                        <div class="form-row" style="gap: 0.5rem;">
+                          <div class="input-group" style="flex: 1; margin: 0;">
+                            <label for="log-pace" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Avg Pace
+                              (min/mi)</label>
+                            <input type="text" id="log-pace" placeholder="e.g. 8:30" class="manual-input">
+                          </div>
+                          <div class="input-group" style="flex: 1; margin: 0;">
+                            <label for="log-calories" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Calories
+                              (kcal)</label>
+                            <input type="number" id="log-calories" placeholder="e.g. 450" class="manual-input">
+                          </div>
+                        </div>
+
+                        <div class="input-group" style="margin: 0;">
+                          <label for="log-notes" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Notes</label>
+                          <textarea id="log-notes" class="manual-input" rows="3"
+                            placeholder="How did it feel? Any details..."></textarea>
+                        </div>
+
+                      </div>
+                    </details>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: stretch;">
+                      <button id="challenge-log-workout-btn" class="btn btn-secondary" style="flex: 3;">Log
+                        Workout</button>
+                      <button id="clear-form-btn" class="btn btn-secondary"
+                        style="flex: 1; background: rgba(255,255,255,0.05);">Clear</button>
+                      <button id="cancel-edit-btn" class="btn btn-secondary"
+                        style="display: none; background: rgba(255,100,100,0.2); border-color: rgba(255,100,100,0.3); flex: 1;">Cancel</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Column 2: The Logs and Controls -->
+                <div class="workout-log-column right">
+                  <div class="workouts-container" style="margin-top: 0;">
+                    <h3 style="margin-top: 0; margin-bottom: 0.5rem;">Recent Logs</h3>
+
+                    <!-- Bulk Actions Bar -->
+                    <div id="workout-actions-bar"
+                      style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 0.5rem;">
+                      <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="checkbox" id="select-all-workouts" style="cursor: pointer;">
+                        <label for="select-all-workouts" style="cursor: pointer; font-size: 0.9rem; margin: 0;">Select
+                          All</label>
+                      </div>
+                      <button id="bulk-delete-btn" class="btn-icon" style="color: #ff5555; display: none;"
+                        title="Delete Selected">
+                        🗑️ Delete Selected
+                      </button>
+                    </div>
+
+                    <div id="workout-list">
+                      <!-- Workouts injected here -->
+                    </div>
+                  </div>
+
+                  <div class="workout-history-section" style="margin-top: 1.5rem;">
+                    <div id="history-header"
+                      style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                      <h3 style="margin: 0; font-size: 1.1rem;">Workout History</h3>
+                      <span id="history-toggle-icon">▼</span>
+                    </div>
+                    <div id="workout-history-list" class="hidden" style="margin-top: 1rem;">
+                      <!-- Older workouts will be rendered here -->
+                      <p style="color: var(--text-muted); font-style: italic; text-align: center;">No history logs yet.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="challenge-controls"
+                    style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 1rem;">
+                    <div class="control-row" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                      <select id="target-challenge-select" class="manual-input" style="flex: 1;">
+                        <!-- Options injected by JS -->
+                      </select>
+                    </div>
+                    <p id="challenge-summary"
+                      style="margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted);">0
+                      kJ
+                      selected (for climbing)</p>
+                    <button id="add-to-challenge-btn" class="btn btn-primary" disabled style="width: 100%;">Add to
+                      Challenge</button>
                   </div>
                 </div>
               </div>
-
-              <!-- Optional Detailed Stats -->
-              <details id="details-container"
-                style="margin-top: 1rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden;">
-                <summary
-                  style="padding: 0.75rem; background: rgba(255,255,255,0.05); cursor: pointer; font-size: 0.9rem; user-select: none;">
-                  Optional Details (Speed, Cadence, Notes...)
-                </summary>
-                <div
-                  style="padding: 1rem; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 0.75rem;">
-
-                  <div class="form-row" style="gap: 0.5rem;">
-                    <div class="input-group" style="flex: 1; margin: 0;">
-                      <label for="log-cadence" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Avg Cadence
-                        (rpm)</label>
-                      <input type="number" id="log-cadence" placeholder="e.g. 85" class="manual-input">
-                    </div>
-                    <div class="input-group" style="flex: 1; margin: 0;">
-                      <label for="log-speed" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Avg Speed (mph)</label>
-                      <input type="number" id="log-speed" placeholder="e.g. 18" class="manual-input">
-                    </div>
-                  </div>
-
-                  <div class="form-row" style="gap: 0.5rem;">
-                    <div class="input-group" style="flex: 1; margin: 0;">
-                      <label for="log-resistance" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Avg Resistance
-                        (%)</label>
-                      <input type="number" id="log-resistance" placeholder="e.g. 45" class="manual-input">
-                    </div>
-                    <div class="input-group" style="flex: 1; margin: 0;">
-                      <label for="log-elevation" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Elevation
-                        (ft)</label>
-                      <input type="number" id="log-elevation" placeholder="e.g. 1200" class="manual-input">
-                    </div>
-                  </div>
-
-                  <div class="form-row" style="gap: 0.5rem;">
-                    <div class="input-group" style="flex: 1; margin: 0;">
-                      <label for="log-hr" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Avg Heart Rate
-                        (bpm)</label>
-                      <input type="number" id="log-hr" placeholder="e.g. 145" class="manual-input">
-                    </div>
-                    <div class="input-group" style="flex: 1; margin: 0;">
-                      <label for="log-intensity" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Intensity
-                        (0-10)</label>
-                      <input type="number" id="log-intensity" placeholder="10 = Max Effort" class="manual-input" min="0"
-                        max="10">
-                    </div>
-                  </div>
-
-                  <div class="form-row" style="gap: 0.5rem;">
-                    <div class="input-group" style="flex: 1; margin: 0;">
-                      <label for="log-pace" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Avg Pace (min/mi)</label>
-                      <input type="text" id="log-pace" placeholder="e.g. 8:30" class="manual-input">
-                    </div>
-                    <div class="input-group" style="flex: 1; margin: 0;">
-                      <label for="log-calories" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Calories
-                        (kcal)</label>
-                      <input type="number" id="log-calories" placeholder="e.g. 450" class="manual-input">
-                    </div>
-                  </div>
-
-                  <div class="input-group" style="margin: 0;">
-                    <label for="log-notes" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Notes</label>
-                    <textarea id="log-notes" class="manual-input" rows="3"
-                      placeholder="How did it feel? Any details..."></textarea>
-                  </div>
-
-                </div>
-              </details>
-              <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: stretch;">
-                <button id="challenge-log-workout-btn" class="btn btn-secondary" style="flex: 3;">Log Workout</button>
-                <button id="clear-form-btn" class="btn btn-secondary"
-                  style="flex: 1; background: rgba(255,255,255,0.05);">Clear</button>
-                <button id="cancel-edit-btn" class="btn btn-secondary"
-                  style="display: none; background: rgba(255,100,100,0.2); border-color: rgba(255,100,100,0.3); flex: 1;">Cancel</button>
-              </div>
-            </div>
-
-            <div class="workouts-container">
-              <h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Recent Logs</h3>
-
-              <!-- Bulk Actions Bar -->
-              <div id="workout-actions-bar"
-                style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 0.5rem;">
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                  <input type="checkbox" id="select-all-workouts" style="cursor: pointer;">
-                  <label for="select-all-workouts" style="cursor: pointer; font-size: 0.9rem; margin: 0;">Select
-                    All</label>
-                </div>
-                <button id="bulk-delete-btn" class="btn-icon" style="color: #ff5555; display: none;"
-                  title="Delete Selected">
-                  🗑️ Delete Selected
-                </button>
-              </div>
-
-              <div id="workout-list">
-                <!-- Workouts injected here -->
-              </div>
-            </div>
-
-            <div class="workout-history-section" style="margin-top: 2rem;">
-              <div id="history-header"
-                style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-                <h3 style="margin: 0; font-size: 1.1rem;">Workout History</h3>
-                <span id="history-toggle-icon">▼</span>
-              </div>
-              <div id="workout-history-list" class="hidden" style="margin-top: 1rem;">
-                <!-- Older workouts will be rendered here -->
-                <p style="color: var(--text-muted); font-style: italic; text-align: center;">No history logs yet.</p>
-              </div>
-            </div>
-
-            <div class="challenge-controls">
-              <div class="control-row" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
-                <select id="target-challenge-select" class="manual-input" style="flex: 1;">
-                  <!-- Options injected by JS -->
-                </select>
-              </div>
-              <p id="challenge-summary" style="margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted);">0 kJ
-                selected (for climbing)</p>
-              <button id="add-to-challenge-btn" class="btn btn-primary" disabled>Add to Challenge</button>
-            </div>
-          </div>
+          </details>
         </div>
       </div>
 
@@ -467,94 +509,101 @@
       </div>
 
       <div id="tab-challenges" class="tab-content hidden">
-        <div class="card challenges-section">
-          <h2>Challenges</h2>
-          <p class="description">Choose a challenge type and set your goal.</p>
+        <div class="workout-log-container two-columns" style="margin-top: 0;">
 
-          <!-- Challenge Type Tabs -->
-          <div class="challenge-type-tabs"
-            style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">
-            <button class="challenge-type-btn active" data-challenge-type="climbing">🏔️ Climbing</button>
-            <button class="challenge-type-btn" data-challenge-type="distance">🏃 Distance</button>
-          </div>
-
-          <!-- Climbing Challenges Section -->
-          <div id="climbing-challenges-section" class="challenge-type-section">
-            <h3 style="margin-bottom: 1rem;">Climbing Challenges</h3>
-            <p class="description" style="margin-bottom: 1rem;">Select a summit to conquer. All your workouts count
-              towards the active challenge.</p>
-            <div id="climbing-challenges-grid" class="challenges-grid">
-              <!-- Climbing Challenge Cards Injected by JS -->
-            </div>
-
-            <!-- Create Custom Climbing Challenge -->
-            <div class="create-challenge-section"
-              style="margin-top: 1rem; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
-              <h4 style="margin-bottom: 0.5rem;">Create Custom Climbing Goal</h4>
-              <div class="form-row">
-                <input type="text" id="new-climbing-challenge-name" placeholder="Goal Name (e.g. Local Hill)"
-                  class="manual-input" style="flex: 2;">
-                <input type="number" id="new-climbing-challenge-height" placeholder="Height" class="manual-input"
-                  style="flex: 1;">
-                <div class="unit-toggle" style="flex: 0 0 auto;">
-                  <span class="unit-option active" data-unit-type="new-climb-unit" data-unit="m">m</span>
-                  <span class="unit-option" data-unit-type="new-climb-unit" data-unit="ft">ft</span>
+          <!-- Climbing Column -->
+          <div class="workout-log-column left">
+            <div class="card challenges-dropdown-card" style="padding: 0; overflow: hidden; margin-top: 0;">
+              <details id="climbing-section-dropdown" open>
+                <summary class="workouts-summary">
+                  <div class="summary-content">
+                    <h2 style="margin: 0;">🏔️ Climbing</h2>
+                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Select a summit to conquer.</p>
+                  </div>
+                  <span class="dropdown-arrow">▼</span>
+                </summary>
+                <div class="dropdown-body" style="padding: 1.5rem; padding-top: 0.5rem;">
+                  <div id="climbing-challenges-grid" class="challenges-grid">
+                    <!-- Climbing Challenge Cards Injected by JS -->
+                  </div>
+                  <!-- Create Custom Climbing Challenge -->
+                  <div class="create-challenge-section"
+                    style="margin-top: 1.5rem; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
+                    <h4 style="margin-bottom: 0.5rem; font-size: 0.9rem;">Create Custom Climbing Goal</h4>
+                    <div class="form-row">
+                      <input type="text" id="new-climbing-challenge-name" placeholder="Name" class="manual-input"
+                        style="flex: 2; padding: 0.5rem;">
+                      <input type="number" id="new-climbing-challenge-height" placeholder="Height" class="manual-input"
+                        style="flex: 1; padding: 0.5rem;">
+                      <div class="unit-toggle" style="flex: 0 0 auto;">
+                        <span class="unit-option active" data-unit-type="new-climb-unit" data-unit="m">m</span>
+                        <span class="unit-option" data-unit-type="new-climb-unit" data-unit="ft">ft</span>
+                      </div>
+                      <button id="create-climbing-challenge-btn" class="btn btn-secondary"
+                        style="flex: 0 0 auto; padding: 0.5rem 1rem;">+</button>
+                    </div>
+                  </div>
                 </div>
-                <button id="create-climbing-challenge-btn" class="btn btn-secondary" style="flex: 0 0 auto;">+</button>
-              </div>
+              </details>
             </div>
           </div>
 
-          <!-- Distance Challenges Section -->
-          <div id="distance-challenges-section" class="challenge-type-section hidden">
-            <h3 style="margin-bottom: 1rem;">Distance Challenges</h3>
-            <p class="description" style="margin-bottom: 1rem;">Set a distance goal to reach. Track your cumulative
-              distance across all workouts.</p>
-            <div id="distance-challenges-grid" class="challenges-grid">
-              <!-- Distance Challenge Cards Injected by JS -->
-            </div>
-
-            <!-- Create Custom Distance Challenge -->
-            <div class="create-challenge-section"
-              style="margin-top: 1rem; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
-              <h4 style="margin-bottom: 0.5rem;">Create Custom Distance Goal</h4>
-              <div class="form-row">
-                <input type="text" id="new-distance-challenge-name" placeholder="Goal Name (e.g. Cross Country)"
-                  class="manual-input" style="flex: 2;">
-                <input type="number" id="new-distance-challenge-distance" placeholder="Distance" class="manual-input"
-                  style="flex: 1;">
-                <div class="unit-toggle" style="flex: 0 0 auto;">
-                  <span class="unit-option active" data-unit-type="new-dist-unit" data-unit="km">km</span>
-                  <span class="unit-option" data-unit-type="new-dist-unit" data-unit="mi">mi</span>
+          <!-- Distance Column -->
+          <div class="workout-log-column right">
+            <div class="card challenges-dropdown-card" style="padding: 0; overflow: hidden; margin-top: 0;">
+              <details id="distance-section-dropdown" open>
+                <summary class="workouts-summary">
+                  <div class="summary-content">
+                    <h2 style="margin: 0;">🏃 Distance</h2>
+                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Set a distance goal to reach.
+                    </p>
+                  </div>
+                  <span class="dropdown-arrow">▼</span>
+                </summary>
+                <div class="dropdown-body" style="padding: 1.5rem; padding-top: 0.5rem;">
+                  <div id="distance-challenges-grid" class="challenges-grid">
+                    <!-- Distance Challenge Cards Injected by JS -->
+                  </div>
+                  <!-- Create Custom Distance Challenge -->
+                  <div class="create-challenge-section"
+                    style="margin-top: 1.5rem; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
+                    <h4 style="margin-bottom: 0.5rem; font-size: 0.9rem;">Create Custom Distance Goal</h4>
+                    <div class="form-row">
+                      <input type="text" id="new-distance-challenge-name" placeholder="Name" class="manual-input"
+                        style="flex: 2; padding: 0.5rem;">
+                      <input type="number" id="new-distance-challenge-distance" placeholder="Dist" class="manual-input"
+                        style="flex: 1; padding: 0.5rem;">
+                      <div class="unit-toggle" style="flex: 0 0 auto;">
+                        <span class="unit-option active" data-unit-type="new-dist-unit" data-unit="km">km</span>
+                        <span class="unit-option" data-unit-type="new-dist-unit" data-unit="mi">mi</span>
+                      </div>
+                      <select id="new-distance-challenge-subtype" class="manual-input"
+                        style="flex: 0 0 auto; width: auto; padding: 0.5rem;">
+                        <option value="bike">🚴</option>
+                        <option value="run">🏃</option>
+                      </select>
+                      <button id="create-distance-challenge-btn" class="btn btn-secondary"
+                        style="flex: 0 0 auto; padding: 0.5rem 1rem;">+</button>
+                    </div>
+                  </div>
                 </div>
-                <!-- New Type Selector -->
-                <select id="new-distance-challenge-subtype" class="manual-input" style="flex: 0 0 auto; width: auto;">
-                  <option value="bike">🚴 Bike</option>
-                  <option value="run">🏃 Run</option>
-                </select>
-                <button id="create-distance-challenge-btn" class="btn btn-secondary" style="flex: 0 0 auto;">+</button>
-              </div>
+              </details>
             </div>
           </div>
-        </div>
-
-        <div class="app-settings-section"
-          style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem; text-align: center;">
-          <p style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">Missing challenges?</p>
-          <button id="reset-challenges-btn" type="button" class="btn btn-secondary"
-            onclick="localStorage.removeItem('custom_climbing_challenges'); localStorage.removeItem('custom_distance_challenges'); location.reload();"
-            style="font-size: 0.8rem; padding: 0.5rem 1rem; background: rgba(255,50,50,0.1); color: #ffaaaa; border-color: rgba(255,50,50,0.2);">
-            Restore Default Challenges
-          </button>
         </div>
       </div>
-  </div>
-  </div>
-  </main>
+    </main>
 
-  <footer>
-    <p>Assumes Bike Weight: 61kg | Efficiency: 100% Mechanical</p>
-  </footer>
+    <div class="global-footer">
+      <footer>
+        <p>Assumes Bike Weight: 61kg | Efficiency: 100% Mechanical</p>
+      </footer>
+      <div class="challenges-settings-subtle">
+        <p>Missing challenges? <button id="reset-challenges-btn" type="button"
+            onclick="localStorage.removeItem('custom_climbing_challenges'); localStorage.removeItem('custom_distance_challenges'); location.reload();">Restore
+            Default Challenges</button></p>
+      </div>
+    </div>
   </div>
 
 
