@@ -2069,58 +2069,56 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = document.getElementById('trophy-case-grid');
         if (!container) return;
 
-        const syncHtml = `
-            <div style="grid-column: 1/-1; text-align: right; margin-bottom: 0.5rem;">
-                <button id="manual-sync-trophies" style="background:none; border:none; color:#64748b; font-size:0.75rem; cursor:pointer; text-decoration:underline;">
-                    🔄 Sync Case
-                </button>
-            </div>
-        `;
+        // Clear container
+        container.innerHTML = '';
 
         if (appData.trophies.length === 0) {
-            container.innerHTML = syncHtml + '<div style="grid-column: 1/-1; text-align:center; color:#888; font-style:italic; padding: 1rem;">Complete challenges to earn trophies!</div>';
-            attachSyncListener();
-            return;
+            container.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:#888; font-style:italic; padding: 1rem;">Complete challenges to earn trophies!</div>';
+        } else {
+            appData.trophies.forEach(t => {
+                const div = document.createElement('div');
+                div.className = 'trophy-card';
+                div.style.cursor = 'pointer';
+
+                // Icon based on type
+                let icon = '🏆';
+                if (t.type === 'climbing') icon = '🏔️';
+                if (t.type === 'distance') {
+                    icon = '🏃';
+                    const bikeIds = ['dia-de-los-muertos', 'century', 'la-sf', 'london-paris'];
+                    if (bikeIds.includes(t.challengeId) || (t.title && t.title.toLowerCase().includes('ride'))) {
+                        icon = '🚴';
+                    }
+                }
+
+                const dateStr = new Date(t.dateEarned).toLocaleDateString();
+                const index = appData.trophies.indexOf(t);
+
+                div.innerHTML = `
+                    <div class="trophy-icon">${icon}</div>
+                    <div class="trophy-info">
+                        <div class="trophy-title">${t.title}</div>
+                        <div class="trophy-date">${dateStr}</div>
+                    </div>
+                `;
+
+                div.setAttribute('onclick', `window.handleTrophyClick(${index})`);
+                container.appendChild(div);
+            });
         }
 
-        container.innerHTML = syncHtml;
-        appData.trophies.forEach(t => {
-            const div = document.createElement('div');
-            div.className = 'trophy-card';
-            div.style.cursor = 'pointer'; // Make it look clickable
+        // Add Sync Button at the bottom
+        const syncWrapper = document.createElement('div');
+        syncWrapper.style.cssText = 'grid-column: 1/-1; text-align: right; margin-top: 1rem;';
+        syncWrapper.innerHTML = `
+            <button id="manual-sync-trophies" style="background:none; border:none; color:#64748b; font-size:0.7rem; cursor:pointer; opacity: 0.5; transition: opacity 0.2s;">
+                🔄 Sync Case
+            </button>
+        `;
+        container.appendChild(syncWrapper);
 
-            // Icon based on type
-            let icon = '🏆';
-            if (t.type === 'climbing') icon = '🏔️';
-            if (t.type === 'distance') {
-                icon = '🏃'; // Default to run
-                // Override for known bike challenges
-                const bikeIds = ['dia-de-los-muertos', 'century', 'la-sf', 'london-paris'];
-                // Check ID or Title (case insensitive)
-                if (bikeIds.includes(t.challengeId) || (t.title && t.title.toLowerCase().includes('ride'))) {
-                    icon = '🚴';
-                }
-            }
-
-            // Simple date formatting
-            const dateStr = new Date(t.dateEarned).toLocaleDateString();
-            const index = appData.trophies.indexOf(t);
-
-            div.innerHTML = `
-                <div class="trophy-icon">${icon}</div>
-                <div class="trophy-info">
-                    <div class="trophy-title">${t.title}</div>
-                    <div class="trophy-date">${dateStr}</div>
-                </div>
-            `;
-
-            // Absolute Robust Click
-            div.setAttribute('onclick', `window.handleTrophyClick(${index})`);
-
-            container.appendChild(div);
-        });
         attachSyncListener();
-        console.log('✅ Rendered trophies v1.3:', appData.trophies.length);
+        console.log('✅ Rendered trophies v1.4:', appData.trophies.length);
     }
 
     function attachSyncListener() {
