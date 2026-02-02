@@ -557,6 +557,46 @@ footer {
   box-shadow: 0 4px 12px rgba(0, 242, 234, 0.2);
 }
 
+.tab-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.tab-favorite-star {
+  font-size: 1.2rem;
+  line-height: 1;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  padding: 0.2rem;
+  border-radius: 50%;
+  margin-left: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-btn.active .tab-favorite-star {
+  color: #0f172a;
+}
+
+.tab-favorite-star:hover {
+  transform: scale(1.3);
+  color: gold !important;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+
+.tab-favorite-star.is-favorite {
+  color: gold !important;
+  text-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+}
+
+.tab-btn.active .tab-favorite-star.is-favorite {
+  color: gold !important;
+}
+
 /* Profile Section */
 .profile-section h2 {
   margin-top: 0;

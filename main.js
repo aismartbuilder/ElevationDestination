@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ${gridItem('Duration', workout.duration ? formatDurationForDisplay(workout.duration) : '-')}
             ${gridItem('Distance', workout.miles ? fmt(workout.miles, 'mi') + ' / ' + fmt((workout.miles * 1.609).toFixed(1), 'km') : '-')}
             
-            ${gridItem('Energy', workout.outputKj ? fmt(workout.outputKj, 'kJ') : '-')}
+            ${gridItem('Total Output', workout.outputKj ? fmt(workout.outputKj, 'kJ') : '-')}
             ${gridItem('Calories', calories ? fmt(calories, 'kcal') : '-')}
             
             ${gridItem('Avg Cadence', workout.cadence ? fmt(workout.cadence, 'rpm') : '-')}
@@ -299,6 +299,15 @@ document.addEventListener('DOMContentLoaded', () => {
             syncTrophies();
             renderAchievementFacts();
             loadSettingsToUI();
+
+            // Auto-switch to favorite tab
+            if (appData.settings.favoriteTab) {
+                const favTabId = appData.settings.favoriteTab;
+                const tabToClick = document.querySelector(`.tab-btn[data-tab="${favTabId}"]`);
+                if (tabToClick) {
+                    tabToClick.click();
+                }
+            }
         }
     }
 
@@ -554,7 +563,40 @@ document.addEventListener('DOMContentLoaded', () => {
         challenges: document.getElementById('tab-challenges')
     };
 
+    function updateStarUI() {
+        tabs.forEach(t => {
+            const star = t.querySelector('.tab-favorite-star');
+            if (star) {
+                const isFav = t.dataset.tab === appData.settings.favoriteTab;
+                star.innerHTML = isFav ? '★' : '☆';
+                if (isFav) star.classList.add('is-favorite');
+                else star.classList.remove('is-favorite');
+            }
+        });
+    }
+
     tabs.forEach(tab => {
+        // Handle Star Click
+        const star = tab.querySelector('.tab-favorite-star');
+        if (star) {
+            star.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const tabId = tab.dataset.tab;
+
+                // Toggle favorite
+                if (appData.settings.favoriteTab === tabId) {
+                    appData.settings.favoriteTab = null;
+                    showNotification('Favorite Removed', 'Default tab restored to My Workouts.', '☆');
+                } else {
+                    appData.settings.favoriteTab = tabId;
+                    showNotification('Favorite Set', `${tab.querySelector('.tab-text').textContent} is now your favorite tab!`, '★');
+                }
+
+                updateStarUI();
+                await database.saveUserProfile(appData.settings);
+            });
+        }
+
         tab.addEventListener('click', () => {
             const target = tab.dataset.tab;
             tabs.forEach(t => t.classList.remove('active'));
@@ -645,6 +687,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Reset modification flags when loading
         isWeightModified = false;
         isGoalModified = false;
+
+        // Update Tab Stars
+        updateStarUI();
     }
 
     // Modification tracking
@@ -2056,7 +2101,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  ${gridItem('Workouts', workoutCount)}
                  ${gridItem('Days Taken', daysTaken)}
                  ${gridItem('Total Time', timeStr)}
-                 ${gridItem('Total kJ', Math.round(totalKj).toLocaleString())}
+                 ${gridItem('Total Output', Math.round(totalKj).toLocaleString() + ' kJ')}
                  ${gridItem('Total Distance', totalDist.toFixed(1) + ' mi')}
                  ${gridItem('Elevation Gain', Math.round(totalElev).toLocaleString() + ' ft')}
             </div>

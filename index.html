@@ -224,10 +224,22 @@
 
       <!-- Tab Navigation -->
       <div class="tab-nav">
-        <button class="tab-btn active" data-tab="myworkouts">My Workouts</button>
-        <button class="tab-btn" data-tab="mychallenges">My Challenges</button>
-        <button class="tab-btn" data-tab="challenges">Challenges</button>
-        <button class="tab-btn" data-tab="profile">Achievements</button>
+        <button class="tab-btn active" data-tab="myworkouts">
+          <span class="tab-text">My Workouts</span>
+          <span class="tab-favorite-star" title="Set as favorite">☆</span>
+        </button>
+        <button class="tab-btn" data-tab="mychallenges">
+          <span class="tab-text">My Challenges</span>
+          <span class="tab-favorite-star" title="Set as favorite">☆</span>
+        </button>
+        <button class="tab-btn" data-tab="challenges">
+          <span class="tab-text">Challenges</span>
+          <span class="tab-favorite-star" title="Set as favorite">☆</span>
+        </button>
+        <button class="tab-btn" data-tab="profile">
+          <span class="tab-text">Achievements</span>
+          <span class="tab-favorite-star" title="Set as favorite">☆</span>
+        </button>
       </div>
     </header>
 
@@ -296,8 +308,9 @@
 
                       <div class="form-row" style="gap: 0.5rem;">
                         <div class="input-group" style="flex: 1; margin: 0;">
-                          <label for="challenge-log-kj" style="display: flex; align-items: center;">kJ <span
-                              class="info-tooltip">ⓘ<span class="tooltip-bubble">Est: Avg Watts × Hours × 3.6. Or check
+                          <label for="challenge-log-kj" style="display: flex; align-items: center;">Total Output (kJ)
+                            <span class="info-tooltip">ⓘ<span class="tooltip-bubble">Est: Avg Watts × Hours × 3.6. Or
+                                check
                                 your
                                 bike computer/app.</span></span></label>
                           <input type="number" id="challenge-log-kj" placeholder="kJ" class="manual-input">
@@ -455,7 +468,7 @@
                     </div>
                     <p id="challenge-summary"
                       style="margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted);">0
-                      kJ
+                      Total Output (kJ)
                       selected (for climbing)</p>
                     <button id="add-to-challenge-btn" class="btn btn-primary" disabled style="width: 100%;">Add to
                       Challenge</button>
