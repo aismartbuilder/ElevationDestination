@@ -975,14 +975,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Calories to KJ Auto-Conversion ---
     if (logCaloriesInput && logKjInput) {
-        logCaloriesInput.addEventListener('input', () => {
-            const kcal = parseFloat(logCaloriesInput.value);
-            if (!isNaN(kcal)) {
-                logKjInput.value = Math.round(kcal * 4.184);
-            } else {
-                logKjInput.value = '';
-            }
-        });
+        // logCaloriesInput.addEventListener('input', () => {
+        //     const kcal = parseFloat(logCaloriesInput.value);
+        //     if (!isNaN(kcal)) {
+        //         logKjInput.value = Math.round(kcal * 4.184);
+        //     } else {
+        //         logKjInput.value = '';
+        //     }
+        // });
 
         // logKjInput.addEventListener('input', () => {
         //     const kj = parseFloat(logKjInput.value);
