@@ -939,14 +939,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        logKjInput.addEventListener('input', () => {
-            const kj = parseFloat(logKjInput.value);
-            if (!isNaN(kj)) {
-                logCaloriesInput.value = Math.round(kj / 4.184);
-            } else {
-                logCaloriesInput.value = '';
-            }
-        });
+        // logKjInput.addEventListener('input', () => {
+        //     const kj = parseFloat(logKjInput.value);
+        //     if (!isNaN(kj)) {
+        //         logCaloriesInput.value = Math.round(kj / 4.184);
+        //     } else {
+        //         logCaloriesInput.value = '';
+        //     }
+        // });
     }
 
 
