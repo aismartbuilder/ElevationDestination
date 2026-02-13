@@ -59,6 +59,8 @@
         <div class="input-group checkbox-group">
           <input type="checkbox" id="login-remember">
           <label for="login-remember">Remember Me</label>
+          <a href="#" id="forgot-password-link"
+            style="margin-left: auto; font-size: 0.85rem; color: var(--accent-main);">Forgot Password?</a>
         </div>
         <button type="submit" class="btn btn-primary">Log In</button>
       </form>
@@ -618,6 +620,23 @@
     </div>
   </div>
 
+
+  <!-- FORGOT PASSWORD MODAL -->
+  <div id="forgot-password-modal" class="modal-overlay hidden">
+    <div class="modal-content auth-card">
+      <button class="modal-close" id="close-forgot-modal">&times;</button>
+      <h2>Reset Password 📧</h2>
+      <p style="margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">Enter your email address and we'll
+        send you a link to reset your password.</p>
+      <form id="forgot-password-form">
+        <div class="input-group">
+          <label>Email Address</label>
+          <input type="email" id="forgot-email" placeholder="your@email.com" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Send Reset Link</button>
+      </form>
+    </div>
+  </div>
 
   <script type="module" src="main.js"></script>
 

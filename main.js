@@ -399,6 +399,65 @@ document.addEventListener('DOMContentLoaded', () => {
         switchView('login');
     });
 
+    // Forgot Password
+    const forgotPasswordLink = document.getElementById('forgot-password-link');
+    const forgotPasswordModal = document.getElementById('forgot-password-modal');
+    const closeForgotModalBtn = document.getElementById('close-forgot-modal');
+    const forgotPasswordForm = document.getElementById('forgot-password-form');
+    const forgotEmailInput = document.getElementById('forgot-email');
+
+    if (forgotPasswordLink) {
+        forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const emailField = document.getElementById('login-username');
+            if (emailField && emailField.value.trim()) {
+                forgotEmailInput.value = emailField.value.trim();
+            }
+            forgotPasswordModal.classList.remove('hidden');
+        });
+    }
+
+    if (closeForgotModalBtn) {
+        closeForgotModalBtn.addEventListener('click', () => {
+            forgotPasswordModal.classList.add('hidden');
+        });
+    }
+
+    if (forgotPasswordModal) {
+        forgotPasswordModal.addEventListener('click', (e) => {
+            if (e.target === forgotPasswordModal) {
+                forgotPasswordModal.classList.add('hidden');
+            }
+        });
+
+        // Handle ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !forgotPasswordModal.classList.contains('hidden')) {
+                forgotPasswordModal.classList.add('hidden');
+            }
+        });
+    }
+
+    if (forgotPasswordForm) {
+        forgotPasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = forgotEmailInput.value.trim();
+            if (email) {
+                await handleForgotPassword(email);
+                forgotPasswordModal.classList.add('hidden');
+                forgotPasswordForm.reset();
+            }
+        });
+    }
+
+    async function handleForgotPassword(email) {
+        showNotification('Sending...', 'Checking for account and sending reset link.', '📧');
+        const success = await auth.forgotPassword(email);
+        if (success) {
+            showNotification('Success!', `A password reset link has been sent to ${email}.`, '✅');
+        }
+    }
+
     // LoginForm
     document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();

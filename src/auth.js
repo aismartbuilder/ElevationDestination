@@ -10,7 +10,8 @@ import {
     EmailAuthProvider,
     setPersistence,
     browserLocalPersistence,
-    browserSessionPersistence
+    browserSessionPersistence,
+    sendPasswordResetEmail
 } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js';
 import { auth as firebaseAuth } from './firebase-config.js';
 
@@ -144,6 +145,27 @@ export const auth = {
                 alert('For security reasons, please log out and log back in before changing your password.');
             } else {
                 alert('Password change failed: ' + error.message);
+            }
+            return false;
+        }
+    },
+
+    // Send password reset email
+    async forgotPassword(email) {
+        try {
+            await sendPasswordResetEmail(firebaseAuth, email);
+            console.log('✅ Password reset email sent successfully to:', email);
+            return true;
+        } catch (error) {
+            console.error('❌ Forgot password error:', error.code, error.message);
+
+            // User-friendly error messages
+            if (error.code === 'auth/user-not-found') {
+                alert('No account found with this email address.');
+            } else if (error.code === 'auth/invalid-email') {
+                alert('Please enter a valid email address.');
+            } else {
+                alert('Failed to send reset email: ' + error.message);
             }
             return false;
         }
