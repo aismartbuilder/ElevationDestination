@@ -2707,6 +2707,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         container.innerHTML = `
             <div class="fact-card">
+                <div class="fact-icon">🏔️</div>
+                <div class="fact-content">
+                    <div class="fact-label">Highest Elevation Reached</div>
+                    <div class="fact-value" style="font-size: 1.1rem; margin-top: 0.25rem;">
+                        ${climbFact.comparison}
+                    </div>
+                </div>
+            </div>
+            <div class="fact-card">
+                <div class="fact-icon">🗺️</div>
+                <div class="fact-content">
+                    <div class="fact-label">Distance Equivalent</div>
+                    <div class="fact-value" style="font-size: 1.1rem; margin-top: 0.25rem;">
+                        ${distFact.comparison}
+                    </div>
+                </div>
+            </div>
+            <div class="fact-card">
                 <div class="fact-icon">🌍</div>
                 <div class="fact-content">
                     ${worldContent}
