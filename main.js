@@ -31,20 +31,30 @@ const DEFAULT_CHALLENGES = [
     { id: 'montblanc', title: 'Mont Blanc', height: 4807, type: 'climbing' },
     { id: 'matterhorn', title: 'Matterhorn', height: 4478, type: 'climbing' },
     { id: 'fuji', title: 'Mount Fuji', height: 3776, type: 'climbing' },
-    { id: 'marathon', title: 'Marathon', distance: 42.195, type: 'distance' },
-    { id: 'ultra', title: 'Ultra Marathon', distance: 100, type: 'distance' },
-    { id: 'half-marathon', title: 'Half Marathon', distance: 21.0975, type: 'distance' },
-    { id: 'la-sf', title: 'LA to SF', distance: 617, type: 'distance' },
-    { id: 'century', title: 'Century Ride', distance: 160.9, type: 'distance' },
-    { id: 'london-paris', title: 'London to Paris', distance: 460, type: 'distance' },
-    { id: 'proclaimers', title: 'The Proclaimers', distance: 804.67, type: 'distance' },
-    { id: 'dia-de-los-muertos', title: 'Dia de los Muertos', distance: 158, type: 'distance' },
-    { id: 'la-ny', title: 'LA to NY', distance: 4828, type: 'distance' },
+    { id: 'marathon', title: 'Marathon', distance: 42.195, type: 'distance', subtype: 'run' },
+    { id: 'ultra', title: 'Ultra Marathon', distance: 100, type: 'distance', subtype: 'run' },
+    { id: 'half-marathon', title: 'Half Marathon', distance: 21.0975, type: 'distance', subtype: 'run' },
+    { id: 'la-sf', title: 'LA to SF', distance: 617, type: 'distance', subtype: 'bike' },
+    { id: 'century', title: 'Century Ride', distance: 160.9, type: 'distance', subtype: 'bike' },
+    { id: 'london-paris', title: 'London to Paris', distance: 460, type: 'distance', subtype: 'bike' },
+    { id: 'proclaimers', title: 'The Proclaimers', distance: 804.67, type: 'distance', subtype: 'run' },
+    { id: 'dia-de-los-muertos', title: 'Dia de los Muertos', distance: 158, type: 'distance', subtype: 'bike' },
+    { id: 'la-ny', title: 'LA to NY', distance: 4828, type: 'distance', subtype: 'bike' },
     { id: 'henley', title: 'Henley Royal Regatta', distance: 2.112, type: 'rowing' },
     { id: 'head-of-charles', title: 'Head of the Charles', distance: 4.8, type: 'rowing' },
     { id: 'boat-race', title: 'Oxford-Cambridge Boat Race', distance: 6.8, type: 'rowing' },
     { id: 'english-channel-row', title: 'English Channel Row', distance: 33.8, type: 'rowing' }
 ];
+
+function getChallengeEmoji(c) {
+    if (c.type === 'climbing') return '🏔️';
+    if (c.type === 'rowing') return '🚣';
+    if (c.type === 'distance') {
+        if (c.subtype === 'run' || c.subtype === 'walk' || c.subtype === 'hike') return '🏃';
+        return '🚲'; // Default distance is bike
+    }
+    return '🎯';
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- View Elements ---
@@ -3003,7 +3013,7 @@ document.addEventListener('DOMContentLoaded', () => {
             div.innerHTML = `
                 <div class="challenge-circle-inner" style="position:relative;">
                      <button class="circle-remove-btn" data-id="${c.instanceId}">x</button>
-                     <div class="circle-title">${c.title}</div>
+                     <div class="circle-title">${getChallengeEmoji(c)} ${c.title}</div>
                      <div class="circle-percent">${Math.min(percentage, 100).toFixed(1)}%</div>
                      <div class="circle-stats">
                         ${c.type === 'climbing'
@@ -3365,10 +3375,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         const div = document.createElement('div');
                         div.className = 'challenge-card';
                         div.innerHTML = `
-                        <div class="challenge-title">${c.title}</div>
-                        <div class="challenge-height">${c.height}m / ${(c.height * 3.28084).toFixed(0)}ft</div>
-                        <button class="btn-challenge simple-add-btn" data-id="${c.id}">+ Add</button>
-                     `;
+                <div class="challenge-emoji" style="font-size: 2rem; margin-bottom: 0.5rem;">${getChallengeEmoji(c)}</div>
+                <h3>${c.title}</h3>
+                <p>${c.height ? c.height + 'm / ' + (c.height * 3.28084).toFixed(0) + 'ft' : c.distance + 'km'}</p>
+                <button class="btn btn-secondary btn-sm" onclick="addToMyChallenges('${c.id}')">Start Challenge</button>
+            `;
                         cGrid.appendChild(div);
                     } catch (err) {
                         console.error('Error rendering challenge card:', c, err);
