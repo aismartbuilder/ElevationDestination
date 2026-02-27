@@ -523,10 +523,19 @@
       </div>
 
       <div id="tab-challenges" class="tab-content hidden">
-        <div class="workout-log-container two-columns" style="margin-top: 0;">
+        <div style="text-align: center; margin-bottom: 1.5rem; margin-top: 1rem;">
+          <select id="challenge-category-select" class="manual-input"
+            style="padding: 0.5rem; font-size: 1.1rem; width: 60%; max-width: 300px; display: inline-block; cursor: pointer;">
+            <option value="climbing">🏔️ Climbing</option>
+            <option value="distance">🏃 Distance</option>
+            <option value="rowing">🚣 Rowing</option>
+          </select>
+        </div>
+
+        <div class="workout-log-container" style="margin-top: 0;">
 
           <!-- Climbing Column -->
-          <div class="workout-log-column left">
+          <div id="climbing-column" class="workout-log-column" style="width: 100%;">
             <div class="card challenges-dropdown-card" style="padding: 0; overflow: hidden; margin-top: 0;">
               <details id="climbing-section-dropdown" open>
                 <summary class="workouts-summary">
@@ -563,7 +572,7 @@
           </div>
 
           <!-- Distance Column -->
-          <div class="workout-log-column right">
+          <div id="distance-column" class="workout-log-column hidden" style="width: 100%;">
             <div class="card challenges-dropdown-card" style="padding: 0; overflow: hidden; margin-top: 0;">
               <details id="distance-section-dropdown" open>
                 <summary class="workouts-summary">
@@ -604,6 +613,44 @@
               </details>
             </div>
           </div>
+
+          <!-- Rowing Column -->
+          <div id="rowing-column" class="workout-log-column hidden" style="width: 100%;">
+            <div class="card challenges-dropdown-card" style="padding: 0; overflow: hidden; margin-top: 0;">
+              <details id="rowing-section-dropdown" open>
+                <summary class="workouts-summary">
+                  <div class="summary-content">
+                    <h2 style="margin: 0;">🚣 Rowing</h2>
+                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Set a rowing distance goal.</p>
+                  </div>
+                  <span class="dropdown-arrow">▼</span>
+                </summary>
+                <div class="dropdown-body" style="padding: 1.5rem; padding-top: 0.5rem;">
+                  <div id="rowing-challenges-grid" class="challenges-grid">
+                    <!-- Rowing Challenge Cards Injected by JS -->
+                  </div>
+                  <!-- Create Custom Rowing Challenge -->
+                  <div class="create-challenge-section"
+                    style="margin-top: 1.5rem; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
+                    <h4 style="margin-bottom: 0.5rem; font-size: 0.9rem;">Create Custom Rowing Goal</h4>
+                    <div class="form-row">
+                      <input type="text" id="new-rowing-challenge-name" placeholder="Name" class="manual-input"
+                        style="flex: 2; padding: 0.5rem;">
+                      <input type="number" id="new-rowing-challenge-distance" placeholder="Distance"
+                        class="manual-input" style="flex: 1; padding: 0.5rem;">
+                      <div class="unit-toggle" style="flex: 0 0 auto;">
+                        <span class="unit-option active" data-unit-type="new-row-unit" data-unit="m">m</span>
+                        <span class="unit-option" data-unit-type="new-row-unit" data-unit="ft">ft</span>
+                      </div>
+                      <button id="create-rowing-challenge-btn" class="btn btn-secondary"
+                        style="flex: 0 0 auto; padding: 0.5rem 1rem;">+</button>
+                    </div>
+                  </div>
+                </div>
+              </details>
+            </div>
+          </div>
+
         </div>
       </div>
     </main>

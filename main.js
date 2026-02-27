@@ -15,6 +15,7 @@ let appData = {
     challenges: {
         climbing: [],
         distance: [],
+        rowing: [],
         my: [],
         active: null
     },
@@ -38,7 +39,11 @@ const DEFAULT_CHALLENGES = [
     { id: 'london-paris', title: 'London to Paris', distance: 460, type: 'distance' },
     { id: 'proclaimers', title: 'The Proclaimers', distance: 804.67, type: 'distance' },
     { id: 'dia-de-los-muertos', title: 'Dia de los Muertos', distance: 158, type: 'distance' },
-    { id: 'la-ny', title: 'LA to NY', distance: 4828, type: 'distance' }
+    { id: 'la-ny', title: 'LA to NY', distance: 4828, type: 'distance' },
+    { id: 'henley', title: 'Henley Royal Regatta', distance: 2.112, type: 'rowing' },
+    { id: 'head-of-charles', title: 'Head of the Charles', distance: 4.8, type: 'rowing' },
+    { id: 'boat-race', title: 'Oxford-Cambridge Boat Race', distance: 6.8, type: 'rowing' },
+    { id: 'english-channel-row', title: 'English Channel Row', distance: 33.8, type: 'rowing' }
 ];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -280,6 +285,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const customDistance = await database.getChallenges('custom_distance');
             appData.challenges.distance = Array.isArray(customDistance) ? customDistance : [];
 
+            const customRowing = await database.getChallenges('custom_rowing');
+            appData.challenges.rowing = Array.isArray(customRowing) ? customRowing : [];
+
             // 5. Trophies
             const trophies = await database.getTrophies();
             appData.trophies = Array.isArray(trophies) ? trophies : [];
@@ -357,9 +365,10 @@ document.addEventListener('DOMContentLoaded', () => {
             appData = {
                 settings: {},
                 workouts: [],
-                challenges: { climbing: [], distance: [], my: [], active: null },
+                challenges: { climbing: [], distance: [], rowing: [], my: [], active: null },
                 badges: [],
-                progress: {}
+                progress: {},
+                trophies: []
             };
         }
     });
@@ -727,6 +736,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (target === 'profile') renderAchievementFacts();
         });
     });
+
+    // --- Challenge Category Select Logic ---
+    const categorySelect = document.getElementById('challenge-category-select');
+    const climbingCol = document.getElementById('climbing-column');
+    const distanceCol = document.getElementById('distance-column');
+    const rowingCol = document.getElementById('rowing-column');
+
+    if (categorySelect) {
+        categorySelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            if (climbingCol) climbingCol.classList.add('hidden');
+            if (distanceCol) distanceCol.classList.add('hidden');
+            if (rowingCol) rowingCol.classList.add('hidden');
+
+            if (val === 'climbing' && climbingCol) climbingCol.classList.remove('hidden');
+            if (val === 'distance' && distanceCol) distanceCol.classList.remove('hidden');
+            if (val === 'rowing' && rowingCol) rowingCol.classList.remove('hidden');
+        });
+    }
 
     // --- Profile Settings ---
     const profileWeightInput = document.getElementById('profile-weight');
@@ -2980,7 +3008,9 @@ document.addEventListener('DOMContentLoaded', () => {
                      <div class="circle-stats">
                         ${c.type === 'climbing'
                     ? `<div>${c.progress.toFixed(0)}m / ${c.height}m</div><div>${(c.progress * 3.28084).toFixed(0)}ft / ${(c.height * 3.28084).toFixed(0)}ft</div>`
-                    : `<div>${c.progress.toFixed(1)}km / ${c.distance}km</div><div>${(c.progress * 0.621371).toFixed(1)}mi / ${(c.distance * 0.621371).toFixed(1)}mi</div>`
+                    : c.type === 'rowing'
+                        ? `<div>${(c.progress * 1000).toLocaleString(undefined, { maximumFractionDigits: 0 })}m / ${(c.distance * 1000).toLocaleString(undefined, { maximumFractionDigits: 0 })}m</div><div>${(c.progress * 3280.84).toLocaleString(undefined, { maximumFractionDigits: 0 })}ft / ${(c.distance * 3280.84).toLocaleString(undefined, { maximumFractionDigits: 0 })}ft</div>`
+                        : `<div>${c.progress.toFixed(1)}km / ${c.distance}km</div><div>${(c.progress * 0.621371).toFixed(1)}mi / ${(c.distance * 0.621371).toFixed(1)}mi</div>`
                 }
                      </div>
                      
@@ -3071,7 +3101,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         const contributionDisplay = c.type === 'climbing'
                             ? `${contrib.amount.toFixed(0)}m`
-                            : `${contrib.amount.toFixed(1)}km (${(contrib.amount * 0.621371).toFixed(1)}mi)`;
+                            : c.type === 'rowing'
+                                ? `${(contrib.amount * 1000).toLocaleString(undefined, { maximumFractionDigits: 0 })}m`
+                                : `${contrib.amount.toFixed(1)}km (${(contrib.amount * 0.621371).toFixed(1)}mi)`;
 
                         workoutItem.innerHTML = `
                             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -3202,7 +3234,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (w) {
-                if (challenge && challenge.type === 'distance') {
+                if (challenge && (challenge.type === 'distance' || challenge.type === 'rowing')) {
                     const mi = w.miles || (w.metricType === 'miles' ? w.output : 0) || 0;
                     total += (mi * 1.60934); // km
                 } else {
@@ -3220,6 +3252,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 challengeSummary.textContent = "Select a challenge above";
             } else if (challenge.type === 'distance') {
                 challengeSummary.textContent = `${total.toFixed(1)} km (${(total * 0.621371).toFixed(1)} mi) selected`;
+            } else if (challenge.type === 'rowing') {
+                challengeSummary.textContent = `${(total * 1000).toLocaleString(undefined, { maximumFractionDigits: 0 })}m (${(total * 3280.84).toLocaleString(undefined, { maximumFractionDigits: 0 })}ft) selected`;
             } else {
                 challengeSummary.textContent = `${total.toFixed(0)}m (${(total * 3.28084).toFixed(0)}ft) climbed from selection`;
             }
@@ -3393,6 +3427,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
         }
 
+        const rGrid = document.getElementById('rowing-challenges-grid');
+        if (rGrid) {
+            rGrid.innerHTML = '';
+            const allRowing = [...defaults.filter(x => x.type === 'rowing'), ...(appData.challenges.rowing || [])];
+
+            allRowing
+                .sort((a, b) => a.distance - b.distance)
+                .forEach(c => {
+                    try {
+                        let icon = '🚣 ';
+                        const div = document.createElement('div');
+                        div.className = 'challenge-card';
+                        div.innerHTML = `
+                        <div class="challenge-title">${icon}${c.title}</div>
+                        <div class="challenge-height">${(c.distance * 1000).toLocaleString(undefined, { maximumFractionDigits: 0 })}m / ${(c.distance * 3280.84).toLocaleString(undefined, { maximumFractionDigits: 0 })}ft</div>
+                        <button class="btn-challenge simple-add-btn" data-id="${c.id}">+ Add</button>
+                     `;
+                        rGrid.appendChild(div);
+                    } catch (err) {
+                        console.error('Error rendering rowing card:', c, err);
+                    }
+                });
+        }
+
         document.querySelectorAll('.simple-add-btn').forEach(btn => {
             btn.addEventListener('click', (e) => addToMyChallenges(e.target.dataset.id));
         });
@@ -3453,6 +3511,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('new-distance-challenge-name').value = '';
                 document.getElementById('new-distance-challenge-distance').value = '';
                 showNotification('Created', `${subtype === 'run' ? 'Running' : 'Cycling'} challenge created!`, (subtype === 'run' ? '🏃' : '🚴'));
+            }
+        });
+    }
+
+    const createRowBtn = document.getElementById('create-rowing-challenge-btn');
+    if (createRowBtn) {
+        createRowBtn.addEventListener('click', async () => {
+            const name = document.getElementById('new-rowing-challenge-name').value;
+            const dist = document.getElementById('new-rowing-challenge-distance').value;
+            const unit = document.querySelector('.unit-option.active[data-unit-type="new-row-unit"]')?.dataset.unit || 'm';
+
+            if (name && dist) {
+                let distKm = parseFloat(dist);
+                if (unit === 'm') distKm = distKm / 1000;
+                else if (unit === 'ft') distKm = distKm * 0.0003048;
+
+                const newC = { id: 'custom_r_' + Date.now(), title: name, distance: distKm, type: 'rowing' };
+                if (!appData.challenges.rowing) appData.challenges.rowing = [];
+                appData.challenges.rowing.push(newC);
+                await database.saveChallenges('custom_rowing', appData.challenges.rowing);
+                renderChallenges();
+                document.getElementById('new-rowing-challenge-name').value = '';
+                document.getElementById('new-rowing-challenge-distance').value = '';
+                showNotification('Created', 'Rowing challenge created!', '🚣');
             }
         });
     }
