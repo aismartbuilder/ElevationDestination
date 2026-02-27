@@ -2246,8 +2246,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button class="btn-celebrate-copy btn-secondary" style="flex: 1; padding: 0.75rem;">Copy Image 📋</button>
             </div>
             
-            <div class="close-actions-container" style="text-align: center; margin-top: 0.5rem;">
-                <button class="btn-primary" id="close-trophy-modal" style="width: 100%; border-radius: 8px; padding: 0.75rem;">Close Summary</button>
+            <div class="close-actions-container" style="display: flex; gap: 0.5rem; justify-content: center; margin-top: 0.5rem;">
+                <button class="btn-primary" id="close-trophy-modal" style="flex: 2; border-radius: 8px; padding: 0.75rem;">Close Summary</button>
+                <button class="btn-delete-trophy" id="delete-trophy-btn" style="flex: 1; background: rgba(255, 85, 85, 0.1); border: 1px solid #ff5555; color: #ff5555; border-radius: 8px; padding: 0.75rem; cursor: pointer; transition: all 0.2s;">Delete 🗑️</button>
             </div>
         `;
 
@@ -2278,12 +2279,73 @@ document.addEventListener('DOMContentLoaded', () => {
             );
         }
 
+        // Delete Handler
+        const deleteBtn = modal.querySelector('#delete-trophy-btn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', () => {
+                close();
+                openDeleteTrophyModal(trophy);
+            });
+        }
+
         overlay.appendChild(modal);
         document.body.appendChild(overlay);
 
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) close();
         });
+    }
+
+    function openDeleteTrophyModal(trophy) {
+        const overlay = document.createElement('div');
+        overlay.className = 'confirmation-overlay';
+
+        const modal = document.createElement('div');
+        modal.className = 'confirmation-modal';
+
+        modal.innerHTML = `
+            <h2>Delete Trophy? 🗑️</h2>
+            <p style="margin-bottom: 0.5rem;">Are you sure you want to delete the <strong>${trophy.title}</strong> trophy?</p>
+            <p style="font-size: 0.85rem; color: #ffaa00; margin-bottom: 1.5rem;">This will permanently remove it from your Trophy Case. Workouts associated with this challenge will <strong>not</strong> be deleted, but they will be untethered from this trophy.</p>
+            <div class="confirmation-actions">
+                <button class="btn-cancel" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer;">Cancel</button>
+                <button class="btn-confirm-delete" style="background: #ff5555; border: none; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: bold; cursor: pointer;">Yes, Delete It</button>
+            </div>
+        `;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        const close = () => {
+            overlay.classList.add('fade-out');
+            setTimeout(() => overlay.remove(), 200);
+        };
+
+        modal.querySelector('.btn-cancel').addEventListener('click', close);
+
+        modal.querySelector('.btn-confirm-delete').addEventListener('click', async () => {
+            close();
+            await deleteTrophy(trophy.id);
+        });
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) close();
+        });
+    }
+
+    async function deleteTrophy(trophyId) {
+        // Remove from local array
+        appData.trophies = appData.trophies.filter(t => t.id !== trophyId);
+
+        // Save to database
+        const success = await database.saveTrophies(appData.trophies);
+
+        if (success) {
+            renderTrophies();
+            showNotification('Deleted', 'Trophy removed from your case.', '🗑️');
+        } else {
+            showNotification('Error', 'Failed to delete trophy.', '⚠️');
+        }
     }
 
     function renderTrophies() {

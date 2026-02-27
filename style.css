@@ -2771,3 +2771,61 @@ details.password-change-section summary::-webkit-details-marker {
   margin: 0;
   /* Override any auto margin */
 }
+/* Trophy Case Styles */
+.trophy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.trophy-card {
+  background: var(--card-bg);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.trophy-card:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-5px);
+  border-color: var(--primary-color);
+  box-shadow: 0 8px 25px rgba(0, 242, 234, 0.2);
+}
+
+.trophy-icon {
+  font-size: 3rem;
+  line-height: 1;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+  transition: transform 0.3s ease;
+}
+
+.trophy-card:hover .trophy-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.trophy-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.trophy-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: white;
+}
+
+.trophy-date {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
