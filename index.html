@@ -638,7 +638,22 @@
     </div>
   </div>
 
-  <script type="module" src="main.js"></script>
+  <!-- DELETE WORKOUT MODAL -->
+  <div id="delete-workout-modal" class="modal-overlay hidden">
+    <div class="modal-content auth-card" style="text-align: center;">
+      <button class="modal-close" id="close-delete-workout-modal">&times;</button>
+      <h2>Delete Workout 🗑️</h2>
+      <p style="margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">Are you sure you want to remove
+        this workout from the challenge? This action cannot be undone.</p>
+      <div style="display: flex; gap: 1rem; justify-content: center;">
+        <button id="cancel-delete-workout-btn" class="btn btn-secondary" style="flex: 1;">Cancel</button>
+        <button id="confirm-delete-workout-btn" class="btn btn-primary"
+          style="flex: 1; background-color: #ff5555; border-color: #ff5555;">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="main.js?v=202602271428"></script>
 
 
 </body>

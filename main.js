@@ -450,6 +450,62 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Delete Workout Modal ---
+    const deleteWorkoutModal = document.getElementById('delete-workout-modal');
+    const closeDeleteWorkoutModalBtn = document.getElementById('close-delete-workout-modal');
+    const cancelDeleteWorkoutBtn = document.getElementById('cancel-delete-workout-btn');
+    const confirmDeleteWorkoutBtn = document.getElementById('confirm-delete-workout-btn');
+
+    let pendingDeleteChallengeId = null;
+    let pendingDeleteWorkoutId = null;
+
+    function closeDeleteModal() {
+        if (deleteWorkoutModal) deleteWorkoutModal.classList.add('hidden');
+        pendingDeleteChallengeId = null;
+        pendingDeleteWorkoutId = null;
+    }
+
+    if (closeDeleteWorkoutModalBtn) closeDeleteWorkoutModalBtn.addEventListener('click', closeDeleteModal);
+    if (cancelDeleteWorkoutBtn) cancelDeleteWorkoutBtn.addEventListener('click', closeDeleteModal);
+
+    if (deleteWorkoutModal) {
+        deleteWorkoutModal.addEventListener('click', (e) => {
+            if (e.target === deleteWorkoutModal) closeDeleteModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !deleteWorkoutModal.classList.contains('hidden')) {
+                closeDeleteModal();
+            }
+        });
+    }
+
+    if (confirmDeleteWorkoutBtn) {
+        confirmDeleteWorkoutBtn.addEventListener('click', async () => {
+            if (!pendingDeleteChallengeId || !pendingDeleteWorkoutId) return;
+
+            const challenge = appData.challenges.my.find(c => c.instanceId === pendingDeleteChallengeId);
+            if (challenge && challenge.contributions) {
+                const contribIndex = challenge.contributions.findIndex(c => c.workoutId === pendingDeleteWorkoutId);
+                if (contribIndex !== -1) {
+                    const contrib = challenge.contributions[contribIndex];
+                    challenge.progress = Math.max(0, challenge.progress - contrib.amount);
+                    challenge.contributions.splice(contribIndex, 1);
+
+                    await saveMyChallengesProp();
+                    renderMyChallenges();
+                    showNotification('Removed', 'Workout removed from challenge.', '🗑️');
+                }
+            }
+            closeDeleteModal();
+        });
+    }
+
+    function openDeleteWorkoutModal(challengeId, workoutId) {
+        pendingDeleteChallengeId = challengeId;
+        pendingDeleteWorkoutId = workoutId;
+        if (deleteWorkoutModal) deleteWorkoutModal.classList.remove('hidden');
+    }
+
     async function handleForgotPassword(email) {
         showNotification('Sending...', 'Checking for account and sending reset link.', '📧');
         const success = await auth.forgotPassword(email);
@@ -1795,6 +1851,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update Select All Checkbox State based on individual selections
         updateSelectAllState();
         updateBulkActionUI();
+        renderAchievementFacts();
     }
 
     // --- Bulk Action & Deletion Logic ---
@@ -1987,7 +2044,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         type: challenge.type,
                         dateEarned: new Date().toISOString(),
                         height: challenge.height || null,
-                        distance: challenge.distance || null
+                        distance: challenge.distance || null,
+                        contributions: challenge.contributions ? [...challenge.contributions] : []
                     };
                     appData.trophies.unshift(trophy);
                     changed = true;
@@ -2032,6 +2090,20 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log(`🧹 syncTrophies: Removed ${initialCount - appData.trophies.length} trophies.`);
         }
 
+        // 3. Remove completed challenges from active list
+        const initialActiveCount = appData.challenges.my.length;
+        appData.challenges.my = appData.challenges.my.filter(challenge => {
+            const total = challenge.type === 'climbing' ? challenge.height : challenge.distance;
+            const progress = parseFloat(challenge.progress) || 0;
+            const isCompleted = progress >= parseFloat(total) - 0.1;
+            return !isCompleted;
+        });
+
+        if (appData.challenges.my.length !== initialActiveCount) {
+            await saveMyChallengesProp();
+            renderMyChallenges();
+        }
+
         if (changed) {
             await database.saveTrophies(appData.trophies);
             renderTrophies();
@@ -2060,7 +2132,8 @@ document.addEventListener('DOMContentLoaded', () => {
             type: challenge.type,
             dateEarned: new Date().toISOString(),
             height: challenge.height || null,
-            distance: challenge.distance || null
+            distance: challenge.distance || null,
+            contributions: challenge.contributions ? [...challenge.contributions] : []
         };
 
         appData.trophies.unshift(trophy); // Add to top
@@ -2078,10 +2151,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function showTrophySummary(trophy) {
         console.log('🏆 Showing summary for:', trophy.title);
 
-        // 1. Find the challenge data
-        const challenge = appData.challenges.my.find(c => c.instanceId === trophy.instanceId);
+        // 1. Use trophy's own contributions
 
-        // 2. Aggregate Stats (Default to 0 if challenge missing)
+        // 2. Aggregate Stats (Default to 0 if missing)
         let totalTime = 0;
         let totalKj = 0;
         let totalDist = 0;
@@ -2090,8 +2162,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let firstDate = null;
         let lastDate = null;
 
-        if (challenge && challenge.contributions) {
-            const contributions = challenge.contributions || [];
+        if (trophy && trophy.contributions) {
+            const contributions = trophy.contributions || [];
             const contributingWorkouts = [];
 
             contributions.forEach(contrib => {
@@ -2153,7 +2225,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div style="font-size: 3rem; margin-bottom: 0.5rem; text-shadow: 0 0 20px rgba(255,215,0,0.5);">🏆</div>
                 <h2 style="margin: 0; font-size: 1.5rem; color: white;">${trophy.title}</h2>
                 <div style="color: #94a3b8; font-size: 0.9rem; margin-top: 0.25rem;">Completed on ${new Date(trophy.dateEarned).toLocaleDateString()}</div>
-                ${!challenge ? '<div style="color:#eab308; font-size:0.8rem; margin-top:0.5rem;">(Detailed history not available)</div>' : ''}
+                ${!(trophy.contributions && trophy.contributions.length > 0) ? '<div style="color:#eab308; font-size:0.8rem; margin-top:0.5rem;">(Detailed history not available)</div>' : ''}
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.5rem;">
@@ -2927,8 +2999,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <div style="font-weight: 600; font-size: 0.9rem;">${workout.title}</div>
                                     <div style="font-size: 0.75rem; color: #aaa;">${formatDateForDisplay(workout.date)}</div>
                                 </div>
-                                <div style="text-align: right; font-size: 0.85rem; color: var(--primary-color); font-weight: 600;">
-                                    +${contributionDisplay}
+                                <div style="text-align: right; display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--primary-color); font-weight: 600;">
+                                    <span>+${contributionDisplay}</span>
+                                    <button class="delete-workout-from-challenge-btn" style="background: none; border: none; color: #ff5555; cursor: pointer; font-size: 1rem; padding: 2px 5px;" title="Remove workout from challenge">🗑️</button>
                                 </div>
                             </div>
                         `;
@@ -2938,6 +3011,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             e.stopPropagation(); // Prevent bubbling if needed
                             showWorkoutDetailsModal(workout);
                         });
+
+                        const deleteBtn = workoutItem.querySelector('.delete-workout-from-challenge-btn');
+                        if (deleteBtn) {
+                            deleteBtn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                openDeleteWorkoutModal(c.instanceId, workout.id);
+                            });
+                        }
 
                         workoutList.appendChild(workoutItem);
                     }
@@ -3127,6 +3208,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     // (Optional: don't cap if they want to see over-achievement)
 
                     awardTrophy(challenge);
+
+                    // Remove challenge from active list string
+                    appData.challenges.my = appData.challenges.my.filter(c => c.instanceId !== challenge.instanceId);
+                    await saveMyChallengesProp();
+                    renderMyChallenges();
 
                     // Redirect to Achievements Tag
                     const profileTabBtn = document.querySelector('button[data-tab="profile"]');
