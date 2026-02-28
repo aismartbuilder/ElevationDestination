@@ -14,7 +14,8 @@ let appData = {
     workouts: [],
     challenges: {
         climbing: [],
-        distance: [],
+        running_walking: [],
+        biking: [],
         rowing: [],
         my: [],
         active: null
@@ -31,15 +32,15 @@ const DEFAULT_CHALLENGES = [
     { id: 'montblanc', title: 'Mont Blanc', height: 4807, type: 'climbing' },
     { id: 'matterhorn', title: 'Matterhorn', height: 4478, type: 'climbing' },
     { id: 'fuji', title: 'Mount Fuji', height: 3776, type: 'climbing' },
-    { id: 'marathon', title: 'Marathon', distance: 42.195, type: 'distance', subtype: 'run' },
-    { id: 'ultra', title: 'Ultra Marathon', distance: 100, type: 'distance', subtype: 'run' },
-    { id: 'half-marathon', title: 'Half Marathon', distance: 21.0975, type: 'distance', subtype: 'run' },
-    { id: 'la-sf', title: 'LA to SF', distance: 617, type: 'distance', subtype: 'bike' },
-    { id: 'century', title: 'Century Ride', distance: 160.9, type: 'distance', subtype: 'bike' },
-    { id: 'london-paris', title: 'London to Paris', distance: 460, type: 'distance', subtype: 'bike' },
-    { id: 'proclaimers', title: 'The Proclaimers', distance: 804.67, type: 'distance', subtype: 'run' },
-    { id: 'dia-de-los-muertos', title: 'Dia de los Muertos', distance: 158, type: 'distance', subtype: 'bike' },
-    { id: 'la-ny', title: 'LA to NY', distance: 4828, type: 'distance', subtype: 'bike' },
+    { id: 'marathon', title: 'Marathon', distance: 42.195, type: 'running_walking', subtype: 'run' },
+    { id: 'ultra', title: 'Ultra Marathon', distance: 100, type: 'running_walking', subtype: 'run' },
+    { id: 'half-marathon', title: 'Half Marathon', distance: 21.0975, type: 'running_walking', subtype: 'run' },
+    { id: 'la-sf', title: 'LA to SF', distance: 617, type: 'biking' },
+    { id: 'century', title: 'Century Ride', distance: 160.9, type: 'biking' },
+    { id: 'london-paris', title: 'London to Paris', distance: 460, type: 'biking' },
+    { id: 'proclaimers', title: 'The Proclaimers', distance: 804.67, type: 'running_walking', subtype: 'run' },
+    { id: 'dia-de-los-muertos', title: 'Dia de los Muertos', distance: 158, type: 'biking' },
+    { id: 'la-ny', title: 'LA to NY', distance: 4828, type: 'biking' },
     { id: 'henley', title: 'Henley Royal Regatta', distance: 2.112, type: 'rowing' },
     { id: 'head-of-charles', title: 'Head of the Charles', distance: 4.8, type: 'rowing' },
     { id: 'boat-race', title: 'Oxford-Cambridge Boat Race', distance: 6.8, type: 'rowing' },
@@ -49,9 +50,10 @@ const DEFAULT_CHALLENGES = [
 function getChallengeEmoji(c) {
     if (c.type === 'climbing') return '🏔️';
     if (c.type === 'rowing') return '🚣';
-    if (c.type === 'distance') {
-        if (c.subtype === 'run' || c.subtype === 'walk' || c.subtype === 'hike') return '🏃';
-        return '🚲'; // Default distance is bike
+    if (c.type === 'biking') return '🚴';
+    if (c.type === 'running_walking') {
+        if (c.subtype === 'walk') return '🚶';
+        return '🏃';
     }
     return '🎯';
 }
@@ -289,11 +291,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const myChallenges = await database.getChallenges('my');
             appData.challenges.my = Array.isArray(myChallenges) ? myChallenges : [];
 
-            const customClimbing = await database.getChallenges('custom_climbing');
-            appData.challenges.climbing = Array.isArray(customClimbing) ? customClimbing : [];
+            const customRunningWalking = await database.getChallenges('custom_running_walking') || await database.getChallenges('custom_distance');
+            appData.challenges.running_walking = Array.isArray(customRunningWalking) ? customRunningWalking : [];
 
-            const customDistance = await database.getChallenges('custom_distance');
-            appData.challenges.distance = Array.isArray(customDistance) ? customDistance : [];
+            const customBiking = await database.getChallenges('custom_biking');
+            appData.challenges.biking = Array.isArray(customBiking) ? customBiking : [];
 
             const customRowing = await database.getChallenges('custom_rowing');
             appData.challenges.rowing = Array.isArray(customRowing) ? customRowing : [];
@@ -375,7 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
             appData = {
                 settings: {},
                 workouts: [],
-                challenges: { climbing: [], distance: [], rowing: [], my: [], active: null },
+                challenges: { climbing: [], running_walking: [], biking: [], rowing: [], my: [], active: null },
                 badges: [],
                 progress: {},
                 trophies: []
@@ -750,18 +752,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Challenge Category Select Logic ---
     const categorySelect = document.getElementById('challenge-category-select');
     const climbingCol = document.getElementById('climbing-column');
-    const distanceCol = document.getElementById('distance-column');
+    const bikingCol = document.getElementById('biking-column');
+    const rwCol = document.getElementById('running-walking-column');
     const rowingCol = document.getElementById('rowing-column');
 
     if (categorySelect) {
         categorySelect.addEventListener('change', (e) => {
             const val = e.target.value;
             if (climbingCol) climbingCol.classList.add('hidden');
-            if (distanceCol) distanceCol.classList.add('hidden');
+            if (bikingCol) bikingCol.classList.add('hidden');
+            if (rwCol) rwCol.classList.add('hidden');
             if (rowingCol) rowingCol.classList.add('hidden');
 
             if (val === 'climbing' && climbingCol) climbingCol.classList.remove('hidden');
-            if (val === 'distance' && distanceCol) distanceCol.classList.remove('hidden');
+            if (val === 'biking' && bikingCol) bikingCol.classList.remove('hidden');
+            if (val === 'running_walking' && rwCol) rwCol.classList.remove('hidden');
             if (val === 'rowing' && rowingCol) rowingCol.classList.remove('hidden');
         });
     }
@@ -2404,6 +2409,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Icon based on type
                 let icon = '🏆';
                 if (t.type === 'climbing') icon = '🏔️';
+                if (t.type === 'biking') icon = '🚴';
+                if (t.type === 'running_walking') icon = '🏃';
                 if (t.type === 'distance') {
                     icon = '🏃';
                     const bikeIds = ['dia-de-los-muertos', 'century', 'la-sf', 'london-paris'];
@@ -2952,10 +2959,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function addToMyChallenges(templateId) {
         // Find in defaults or custom
-        let template = [...appData.challenges.climbing, ...appData.challenges.distance].find(c => c.id === templateId);
+        let template = [
+            ...appData.challenges.climbing,
+            ...appData.challenges.running_walking,
+            ...appData.challenges.biking
+        ].find(c => c.id === templateId);
 
-        // If not found in custom, check defaults (hardcoded or fetched?)
-        // Defaults need to be defined.
+        // If not found in custom, check defaults
         if (!template) {
             template = DEFAULT_CHALLENGES.find(c => c.id === templateId);
         }
@@ -3244,7 +3254,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (w) {
-                if (challenge && (challenge.type === 'distance' || challenge.type === 'rowing')) {
+                if (challenge && (challenge.type === 'running_walking' || challenge.type === 'biking' || challenge.type === 'rowing' || challenge.type === 'distance')) {
                     const mi = w.miles || (w.metricType === 'miles' ? w.output : 0) || 0;
                     total += (mi * 1.60934); // km
                 } else {
@@ -3260,7 +3270,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (challengeSummary) {
             if (!challenge) {
                 challengeSummary.textContent = "Select a challenge above";
-            } else if (challenge.type === 'distance') {
+            } else if (challenge.type === 'running_walking' || challenge.type === 'biking' || challenge.type === 'distance') {
                 challengeSummary.textContent = `${total.toFixed(1)} km (${(total * 0.621371).toFixed(1)} mi) selected`;
             } else if (challenge.type === 'rowing') {
                 challengeSummary.textContent = `${(total * 1000).toLocaleString(undefined, { maximumFractionDigits: 0 })}m (${(total * 3280.84).toLocaleString(undefined, { maximumFractionDigits: 0 })}ft) selected`;
@@ -3387,43 +3397,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
         }
 
-        if (dGrid) {
-            dGrid.innerHTML = '';
-            const allDistance = [...defaults.filter(x => x.type === 'distance'), ...appData.challenges.distance];
+        const rwGrid = document.getElementById('running-walking-challenges-grid');
+        const bGrid = document.getElementById('biking-challenges-grid');
 
-            // Define which challenges get which icon
-            const runningChallenges = ['marathon', 'ultra', 'half-marathon', 'la-sf'];
-            const bikingChallenges = ['century', 'london-paris', 'proclaimers', 'dia-de-los-muertos', 'la-ny'];
+        if (rwGrid) {
+            rwGrid.innerHTML = '';
+            const allRW = [...defaults.filter(x => x.type === 'running_walking'), ...appData.challenges.running_walking];
 
-            allDistance
-                .sort((a, b) => {
-                    const aIsBiking = bikingChallenges.includes(a.id);
-                    const bIsBiking = bikingChallenges.includes(b.id);
-                    const aIsRunning = runningChallenges.includes(a.id);
-                    const bIsRunning = runningChallenges.includes(b.id);
-
-                    // Sort order: Biking, Running, Others
-                    let aOrder = 3;
-                    if (aIsBiking) aOrder = 1;
-                    else if (aIsRunning) aOrder = 2;
-
-                    let bOrder = 3;
-                    if (bIsBiking) bOrder = 1;
-                    else if (bIsRunning) bOrder = 2;
-
-                    if (aOrder !== bOrder) return aOrder - bOrder;
-                    return a.distance - b.distance; // Then by distance
-                })
+            allRW
+                .sort((a, b) => a.distance - b.distance)
                 .forEach(c => {
                     try {
-                        // Determine icon based on challenge ID or subtype
-                        let icon = '';
-                        if (runningChallenges.includes(c.id) || c.subtype === 'run') {
-                            icon = '🏃 ';
-                        } else if (bikingChallenges.includes(c.id) || c.subtype === 'bike') {
-                            icon = '🚴 ';
-                        }
-
+                        let icon = getChallengeEmoji(c) + ' ';
                         const div = document.createElement('div');
                         div.className = 'challenge-card';
                         div.innerHTML = `
@@ -3431,9 +3416,32 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="challenge-height">${c.distance}km / ${(c.distance * 0.621371).toFixed(1)}mi</div>
                         <button class="btn-challenge simple-add-btn" data-id="${c.id}">+ Add</button>
                      `;
-                        dGrid.appendChild(div);
+                        rwGrid.appendChild(div);
                     } catch (err) {
-                        console.error('Error rendering distance card:', c, err);
+                        console.error('Error rendering running/walking card:', c, err);
+                    }
+                });
+        }
+
+        if (bGrid) {
+            bGrid.innerHTML = '';
+            const allBiking = [...defaults.filter(x => x.type === 'biking'), ...appData.challenges.biking];
+
+            allBiking
+                .sort((a, b) => a.distance - b.distance)
+                .forEach(c => {
+                    try {
+                        let icon = '🚴 ';
+                        const div = document.createElement('div');
+                        div.className = 'challenge-card';
+                        div.innerHTML = `
+                        <div class="challenge-title">${icon}${c.title}</div>
+                        <div class="challenge-height">${c.distance}km / ${(c.distance * 0.621371).toFixed(1)}mi</div>
+                        <button class="btn-challenge simple-add-btn" data-id="${c.id}">+ Add</button>
+                     `;
+                        bGrid.appendChild(div);
+                    } catch (err) {
+                        console.error('Error rendering biking card:', c, err);
                     }
                 });
         }
@@ -3495,33 +3503,63 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const createDistBtn = document.getElementById('create-distance-challenge-btn');
-    if (createDistBtn) {
-        createDistBtn.addEventListener('click', async () => {
-            const name = document.getElementById('new-distance-challenge-name').value;
-            const dist = document.getElementById('new-distance-challenge-distance').value;
-            const unit = document.querySelector('.unit-option.active[data-unit-type="new-dist-unit"]')?.dataset.unit || 'km';
-            const subtype = document.getElementById('new-distance-challenge-subtype')?.value || 'bike';
+    const createRWBtn = document.getElementById('create-running-walking-challenge-btn');
+    if (createRWBtn) {
+        createRWBtn.addEventListener('click', async () => {
+            const name = document.getElementById('new-running-walking-challenge-name').value;
+            const dist = document.getElementById('new-running-walking-challenge-distance').value;
+            const unit = document.querySelector('.unit-option.active[data-unit-type="new-run-unit"]')?.dataset.unit || 'km';
+            const subtype = document.getElementById('new-running-walking-challenge-subtype')?.value || 'run';
 
             if (name && dist) {
                 let distKm = parseFloat(dist);
                 if (unit === 'mi') distKm = distKm * 1.60934;
 
                 const newC = {
-                    id: 'custom_d_' + Date.now(),
+                    id: 'custom_rw_' + Date.now(),
                     title: name,
                     distance: distKm,
-                    type: 'distance',
+                    type: 'running_walking',
                     subtype: subtype
                 };
 
-                appData.challenges.distance.push(newC);
-                await database.saveChallenges('custom_distance', appData.challenges.distance);
+                appData.challenges.running_walking.push(newC);
+                await database.saveChallenges('custom_running_walking', appData.challenges.running_walking);
                 renderChallenges();
 
-                document.getElementById('new-distance-challenge-name').value = '';
-                document.getElementById('new-distance-challenge-distance').value = '';
-                showNotification('Created', `${subtype === 'run' ? 'Running' : 'Cycling'} challenge created!`, (subtype === 'run' ? '🏃' : '🚴'));
+                document.getElementById('new-running-walking-challenge-name').value = '';
+                document.getElementById('new-running-walking-challenge-distance').value = '';
+                showNotification('Created', `${subtype === 'walk' ? 'Walking' : 'Running'} challenge created!`, (subtype === 'walk' ? '🚶' : '🏃'));
+            }
+        });
+    }
+
+    const createBikingBtn = document.getElementById('create-biking-challenge-btn');
+    if (createBikingBtn) {
+        createBikingBtn.addEventListener('click', async () => {
+            const name = document.getElementById('new-biking-challenge-name').value;
+            const dist = document.getElementById('new-biking-challenge-distance').value;
+            const unit = document.querySelector('.unit-option.active[data-unit-type="new-bike-unit"]')?.dataset.unit || 'km';
+
+            if (name && dist) {
+                let distKm = parseFloat(dist);
+                if (unit === 'mi') distKm = distKm * 1.60934;
+
+                const newC = {
+                    id: 'custom_b_' + Date.now(),
+                    title: name,
+                    distance: distKm,
+                    type: 'biking'
+                };
+
+                if (!appData.challenges.biking) appData.challenges.biking = [];
+                appData.challenges.biking.push(newC);
+                await database.saveChallenges('custom_biking', appData.challenges.biking);
+                renderChallenges();
+
+                document.getElementById('new-biking-challenge-name').value = '';
+                document.getElementById('new-biking-challenge-distance').value = '';
+                showNotification('Created', `Biking challenge created!`, '🚴');
             }
         });
     }

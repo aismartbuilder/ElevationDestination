@@ -527,7 +527,8 @@
           <select id="challenge-category-select" class="manual-input"
             style="padding: 0.5rem; font-size: 1.1rem; width: 60%; max-width: 300px; display: inline-block; cursor: pointer;">
             <option value="climbing">🏔️ Climbing</option>
-            <option value="distance">🏃 Distance</option>
+            <option value="running_walking">🏃 Running/Walking</option>
+            <option value="biking">🚴 Biking</option>
             <option value="rowing">🚣 Rowing</option>
           </select>
         </div>
@@ -571,41 +572,81 @@
             </div>
           </div>
 
-          <!-- Distance Column -->
-          <div id="distance-column" class="workout-log-column hidden" style="width: 100%;">
+          <!-- Biking Column -->
+          <div id="biking-column" class="workout-log-column hidden" style="width: 100%;">
             <div class="card challenges-dropdown-card" style="padding: 0; overflow: hidden; margin-top: 0;">
-              <details id="distance-section-dropdown" open>
+              <details id="biking-section-dropdown" open>
                 <summary class="workouts-summary">
                   <div class="summary-content">
-                    <h2 style="margin: 0;">🏃 Distance</h2>
-                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Set a distance goal to reach.
+                    <h2 style="margin: 0;">🚴 Biking</h2>
+                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Set a biking distance goal to
+                      reach.
                     </p>
                   </div>
                   <span class="dropdown-arrow">▼</span>
                 </summary>
                 <div class="dropdown-body" style="padding: 1.5rem; padding-top: 0.5rem;">
-                  <div id="distance-challenges-grid" class="challenges-grid">
-                    <!-- Distance Challenge Cards Injected by JS -->
+                  <div id="biking-challenges-grid" class="challenges-grid">
+                    <!-- Biking Challenge Cards Injected by JS -->
                   </div>
-                  <!-- Create Custom Distance Challenge -->
+                  <!-- Create Custom Biking Challenge -->
                   <div class="create-challenge-section"
                     style="margin-top: 1.5rem; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
-                    <h4 style="margin-bottom: 0.5rem; font-size: 0.9rem;">Create Custom Distance Goal</h4>
+                    <h4 style="margin-bottom: 0.5rem; font-size: 0.9rem;">Create Custom Biking Goal</h4>
                     <div class="form-row">
-                      <input type="text" id="new-distance-challenge-name" placeholder="Name" class="manual-input"
+                      <input type="text" id="new-biking-challenge-name" placeholder="Name" class="manual-input"
                         style="flex: 2; padding: 0.5rem;">
-                      <input type="number" id="new-distance-challenge-distance" placeholder="Dist" class="manual-input"
+                      <input type="number" id="new-biking-challenge-distance" placeholder="Dist" class="manual-input"
                         style="flex: 1; padding: 0.5rem;">
                       <div class="unit-toggle" style="flex: 0 0 auto;">
-                        <span class="unit-option active" data-unit-type="new-dist-unit" data-unit="km">km</span>
-                        <span class="unit-option" data-unit-type="new-dist-unit" data-unit="mi">mi</span>
+                        <span class="unit-option active" data-unit-type="new-bike-unit" data-unit="km">km</span>
+                        <span class="unit-option" data-unit-type="new-bike-unit" data-unit="mi">mi</span>
                       </div>
-                      <select id="new-distance-challenge-subtype" class="manual-input"
+                      <button id="create-biking-challenge-btn" class="btn btn-secondary"
+                        style="flex: 0 0 auto; padding: 0.5rem 1rem;">+</button>
+                    </div>
+                  </div>
+                </div>
+              </details>
+            </div>
+          </div>
+
+          <!-- Running/Walking Column -->
+          <div id="running-walking-column" class="workout-log-column hidden" style="width: 100%;">
+            <div class="card challenges-dropdown-card" style="padding: 0; overflow: hidden; margin-top: 0;">
+              <details id="running-walking-section-dropdown" open>
+                <summary class="workouts-summary">
+                  <div class="summary-content">
+                    <h2 style="margin: 0;">🏃 Running/Walking</h2>
+                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Set a running or walking goal to
+                      reach.
+                    </p>
+                  </div>
+                  <span class="dropdown-arrow">▼</span>
+                </summary>
+                <div class="dropdown-body" style="padding: 1.5rem; padding-top: 0.5rem;">
+                  <div id="running-walking-challenges-grid" class="challenges-grid">
+                    <!-- Running/Walking Challenge Cards Injected by JS -->
+                  </div>
+                  <!-- Create Custom Running/Walking Challenge -->
+                  <div class="create-challenge-section"
+                    style="margin-top: 1.5rem; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
+                    <h4 style="margin-bottom: 0.5rem; font-size: 0.9rem;">Create Custom Running/Walking Goal</h4>
+                    <div class="form-row">
+                      <input type="text" id="new-running-walking-challenge-name" placeholder="Name" class="manual-input"
+                        style="flex: 2; padding: 0.5rem;">
+                      <input type="number" id="new-running-walking-challenge-distance" placeholder="Dist"
+                        class="manual-input" style="flex: 1; padding: 0.5rem;">
+                      <div class="unit-toggle" style="flex: 0 0 auto;">
+                        <span class="unit-option active" data-unit-type="new-run-unit" data-unit="km">km</span>
+                        <span class="unit-option" data-unit-type="new-run-unit" data-unit="mi">mi</span>
+                      </div>
+                      <select id="new-running-walking-challenge-subtype" class="manual-input"
                         style="flex: 0 0 auto; width: auto; padding: 0.5rem;">
-                        <option value="bike">🚴</option>
                         <option value="run">🏃</option>
+                        <option value="walk">🚶</option>
                       </select>
-                      <button id="create-distance-challenge-btn" class="btn btn-secondary"
+                      <button id="create-running-walking-challenge-btn" class="btn btn-secondary"
                         style="flex: 0 0 auto; padding: 0.5rem 1rem;">+</button>
                     </div>
                   </div>
