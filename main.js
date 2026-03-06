@@ -1340,7 +1340,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const desc = logDescInput.value.trim();
         let kjValue = parseFloat(logKjInput.value) || null;
-        const milesValue = parseFloat(logMilesInput.value) || null;
+
+        let distanceUnit = 'mi';
+        const distToggle = document.querySelector('.unit-option.active[data-unit-type="log-dist"]');
+        if (distToggle) distanceUnit = distToggle.dataset.unit;
+
+        const rawDistance = parseFloat(logMilesInput.value) || null;
+        let milesValue = rawDistance;
+
+        if (distanceUnit === 'm' && rawDistance !== null) {
+            milesValue = rawDistance / 1609.344; // Precise conversion
+        }
 
         // Capture Optional Values
         const cadence = logCadenceInput ? (parseFloat(logCadenceInput.value) || null) : null;
@@ -1373,7 +1383,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (h === 0 && m === 0) missingFields.push('Duration');
 
             // Check intensity (explicit check for null since 0 might be coerced to null in extraction above, but 0 is technically a value)
-            // However, current extraction: const intensity = ... (parseFloat() || null). 0 becomes null.
             if (intensity === null) missingFields.push('Intensity Level');
 
             if (missingFields.length > 0) {
@@ -1401,7 +1410,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const calcResult = calculateAdvancedCalories(appData.settings, {
                     description: desc,
-                    intensity: intensity, // validated as not null/und earlier if checked
+                    intensity: intensity,
                     durationMinutes: totalMins,
                     heartRate: heartRate
                 });
@@ -1419,13 +1428,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Explicitly populate the inputs for visibility (even if cleared shortly after, it ensures data integrity flow)
                     if (logCaloriesInput) logCaloriesInput.value = estimatedCal;
                     if (logKjInput) logKjInput.value = estimatedKj;
-
-                    // Add explanation to notes if empty
-                    if (!notes) {
-                        // We can't easily update the 'const notes' variable we read earlier without modifying the 'newWorkout' object construction later.
-                        // But we can append it to the description or just let the user see the alert.
-                        // The prompt implies we just need to "provide" it. The Alert does that.
-                    }
                 }
             }
 
@@ -1433,8 +1435,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (estimatedCal) calories = estimatedCal;
             if (estimatedKj) kjValue = estimatedKj;
         }
-
-
 
         // HTML5 date input provides yyyy-mm-dd format
         let date;
@@ -1447,15 +1447,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (!desc) return showNotification('Error', 'Please enter a description.', '⚠️');
-        if (!kjValue && !milesValue) return showNotification('Error', 'Enter kJ or miles.', '⚠️');
+        if (!kjValue && !milesValue) return showNotification('Error', 'Enter kJ or distance.', '⚠️');
 
         const tempId = Date.now().toString(); // Generate temp ID
         const newWorkout = {
             type, date, duration: durationInput, title: desc, outputKj: kjValue, miles: milesValue,
+            distanceUnit, rawDistance,
             output: kjValue || milesValue,
             metricType: kjValue ? 'output' : 'miles',
-            cadence, speed, resistance, elevation, pace, calories, notes, heartRate, intensity, // Add new fields
-            id: tempId // Use temp ID initially
+            cadence, speed, resistance, elevation, pace, calories, notes, heartRate, intensity,
+            id: tempId
         };
         console.log('DEBUG: Logging Workout with temp ID:', tempId, newWorkout);
 
@@ -1589,7 +1590,7 @@ document.addEventListener('DOMContentLoaded', () => {
         editingWorkoutId = workout.id;
 
         // Populate form with workout data
-        const knownTypes = ['bike', 'run', 'walk', 'hike'];
+        const knownTypes = ['bike', 'run', 'walk', 'hike', 'row'];
         if (knownTypes.includes(workout.type)) {
             logTypeInput.value = workout.type;
             if (logCustomTypeInput) logCustomTypeInput.classList.add('hidden');
@@ -1602,7 +1603,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         logDescInput.value = workout.title || '';
         logKjInput.value = workout.outputKj || '';
-        logMilesInput.value = workout.miles || '';
+
+        const distValue = workout.rawDistance || workout.miles || '';
+        const distUnit = workout.distanceUnit || 'mi';
+        logMilesInput.value = distValue;
+
+        // Update unit toggle
+        document.querySelectorAll(`.unit-option[data-unit-type="log-dist"]`).forEach(b => b.classList.remove('active'));
+        const targetToggle = document.querySelector(`.unit-option[data-unit-type="log-dist"][data-unit="${distUnit}"]`);
+        if (targetToggle) targetToggle.classList.add('active');
         if (logCaloriesInput) logCaloriesInput.value = workout.calories || '';
         if (logHrInput) logHrInput.value = workout.heartRate || '';
         if (logIntensityInput) logIntensityInput.value = workout.intensity || '';
@@ -1659,7 +1668,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const desc = logDescInput.value.trim();
         const kjValue = parseFloat(logKjInput.value) || null;
-        const milesValue = parseFloat(logMilesInput.value) || null;
+
+        let distanceUnit = 'mi';
+        const distToggle = document.querySelector('.unit-option.active[data-unit-type="log-dist"]');
+        if (distToggle) distanceUnit = distToggle.dataset.unit;
+
+        const rawDistance = parseFloat(logMilesInput.value) || null;
+        let milesValue = rawDistance;
+
+        if (distanceUnit === 'm' && rawDistance !== null) {
+            milesValue = rawDistance / 1609.344;
+        }
+
         const caloriesValue = logCaloriesInput ? (parseFloat(logCaloriesInput.value) || null) : null;
         const heartRateValue = logHrInput ? (parseFloat(logHrInput.value) || null) : null;
         const intensityValue = logIntensityInput ? (parseFloat(logIntensityInput.value) || null) : null;
@@ -1692,6 +1712,8 @@ document.addEventListener('DOMContentLoaded', () => {
             title: desc,
             outputKj: kjValue,
             miles: milesValue,
+            distanceUnit,
+            rawDistance,
             calories: caloriesValue,
             heartRate: heartRateValue,
             intensity: intensityValue,
@@ -1745,6 +1767,11 @@ document.addEventListener('DOMContentLoaded', () => {
         logDescInput.value = '';
         logKjInput.value = '';
         logMilesInput.value = '';
+
+        // Reset distance unit toggle
+        document.querySelectorAll(`.unit-option[data-unit-type="log-dist"]`).forEach(b => b.classList.remove('active'));
+        const miToggle = document.querySelector(`.unit-option[data-unit-type="log-dist"][data-unit="mi"]`);
+        if (miToggle) miToggle.classList.add('active');
         if (logDurationHoursInput) logDurationHoursInput.value = '';
         if (logDurationMinutesInput) logDurationMinutesInput.value = '';
         if (logCustomTypeInput) {
@@ -1813,10 +1840,18 @@ document.addEventListener('DOMContentLoaded', () => {
             // Simplified for brevity in replacement (keeping core logic):
             const icon = '💪'; // Simplified icon mapping
             let metricDisplay = '';
-            if (w.outputKj && w.miles) metricDisplay = `${w.outputKj} kJ • ${w.miles} mi`;
-            else if (w.outputKj) metricDisplay = `${w.outputKj} kJ`;
-            else if (w.miles) metricDisplay = `${w.miles} mi`;
-            else metricDisplay = `${w.output}`;
+            const displayDist = w.rawDistance || w.miles;
+            const displayUnit = w.distanceUnit || 'mi';
+
+            if (w.outputKj && displayDist) {
+                metricDisplay = `${w.outputKj} kJ • ${typeof displayDist === 'number' ? displayDist.toFixed(displayUnit === 'mi' ? 1 : 0) : displayDist} ${displayUnit}`;
+            } else if (w.outputKj) {
+                metricDisplay = `${w.outputKj} kJ`;
+            } else if (displayDist) {
+                metricDisplay = `${typeof displayDist === 'number' ? displayDist.toFixed(displayUnit === 'mi' ? 1 : 0) : displayDist} ${displayUnit}`;
+            } else {
+                metricDisplay = `${w.output}`;
+            }
 
             const formattedDate = formatDateForDisplay(w.date);
             const formattedDuration = formatDurationForDisplay(w.duration);

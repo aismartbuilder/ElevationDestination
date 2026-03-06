@@ -277,6 +277,7 @@
                             <option value="run">🏃 Run</option>
                             <option value="walk">🚶 Walk</option>
                             <option value="hike">🥾 Hike</option>
+                            <option value="row">🚣 Row</option>
                             <option value="custom">✨ Custom</option>
                           </select>
                         </div>
@@ -318,8 +319,15 @@
                           <input type="number" id="challenge-log-kj" placeholder="kJ" class="manual-input">
                         </div>
                         <div class="input-group" style="flex: 1; margin: 0;">
-                          <label for="challenge-log-miles">Miles</label>
-                          <input type="number" id="challenge-log-miles" placeholder="Miles" class="manual-input">
+                          <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                            <label for="challenge-log-miles" style="margin-bottom: 0;">Distance</label>
+                            <div class="unit-toggle" id="log-dist-toggle">
+                              <span class="unit-option active" data-unit-type="log-dist" data-unit="mi">mi</span>
+                              <span class="unit-option" data-unit-type="log-dist" data-unit="m">m</span>
+                            </div>
+                          </div>
+                          <input type="number" id="challenge-log-miles" placeholder="Distance" class="manual-input">
                         </div>
                       </div>
                     </div>
