@@ -25,6 +25,16 @@ let appData = {
     trophies: []
 };
 
+// Track active Firestore real-time listeners so they can be cleaned up on logout
+let activeListeners = [];
+
+// --- Helper: Find Workout by ID (Handles tempId vs docId) ---
+function findWorkoutById(id) {
+    if (!id) return null;
+    const idStr = String(id);
+    return appData.workouts.find(w => String(w.id) === idStr || String(w.internalId) === idStr);
+}
+
 const DEFAULT_CHALLENGES = [
     { id: 'everest', title: 'Mount Everest', height: 8849, type: 'climbing' },
     { id: 'k2', title: 'K2', height: 8611, type: 'climbing' },
@@ -328,6 +338,57 @@ document.addEventListener('DOMContentLoaded', () => {
                     tabToClick.click();
                 }
             }
+
+            // --- Set up real-time listeners for cross-device sync ---
+            setupRealtimeListeners();
+        }
+    }
+
+    function setupRealtimeListeners() {
+        const uid = firebaseAuth.currentUser?.uid;
+        if (!uid) return;
+
+        // Clear any existing listeners first (safety guard against double-setup)
+        cleanupListeners();
+
+        // 1. Workouts listener
+        const unsubWorkouts = database.subscribeToWorkouts(uid, (updatedWorkouts) => {
+            appData.workouts = updatedWorkouts;
+            renderWorkouts();
+            renderAchievementFacts();
+        });
+        activeListeners.push(unsubWorkouts);
+
+        // 2. My Challenges listener
+        const unsubChallenges = database.subscribeToAppData(uid, 'challenges_my', (data) => {
+            appData.challenges.my = Array.isArray(data.list) ? data.list : [];
+            renderMyChallenges();
+            syncTrophies();
+        });
+        activeListeners.push(unsubChallenges);
+
+        // 3. Trophies listener
+        const unsubTrophies = database.subscribeToAppData(uid, 'trophies', (data) => {
+            appData.trophies = Array.isArray(data.list) ? data.list : [];
+            renderTrophies();
+        });
+        activeListeners.push(unsubTrophies);
+
+        // 4. Badges listener
+        const unsubBadges = database.subscribeToAppData(uid, 'badges', (data) => {
+            appData.badges = Array.isArray(data.unlocked) ? data.unlocked : [];
+            loadBadges();
+        });
+        activeListeners.push(unsubBadges);
+
+        console.log(`🔌 ${activeListeners.length} real-time listeners active`);
+    }
+
+    function cleanupListeners() {
+        if (activeListeners.length > 0) {
+            activeListeners.forEach(unsub => unsub());
+            console.log(`🔌 Cleaned up ${activeListeners.length} real-time listeners`);
+            activeListeners = [];
         }
     }
 
@@ -372,6 +433,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } else {
             console.log('❌ User is signed out');
+            // Clean up all real-time listeners to prevent memory leaks / stale callbacks
+            cleanupListeners();
             switchView('landing');
             // Clear Data
             appData = {
@@ -1477,6 +1540,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const workoutIndex = appData.workouts.findIndex(w => w.id === tempId);
             if (workoutIndex !== -1) {
                 appData.workouts[workoutIndex].id = docId;
+                // Proactively update any contributions that were logged with the tempId
+                appData.challenges.my.forEach(challenge => {
+                    if (challenge.contributions) {
+                        challenge.contributions.forEach(contrib => {
+                            if (String(contrib.workoutId) === String(tempId)) {
+                                contrib.workoutId = docId;
+                                console.log(`✅ Updated contribution workoutId: ${tempId} -> ${docId} in challenge: ${challenge.title}`);
+                            }
+                        });
+                    }
+                });
+                await saveMyChallengesProp(); // Save the updated IDs to cloud
                 console.log('✅ Successfully updated workout ID in local array');
             } else {
                 console.error('⚠️ Could not find workout with temp ID:', tempId);
@@ -1484,6 +1559,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Re-render to ensure DOM has the correct ID for selection
             renderWorkouts();
+            renderMyChallenges(); // Refresh the list to show the "Connected Workouts" correctly if showing
 
             showNotification('Logged', 'Workout saved to cloud!', '☁️');
         } catch (e) {
@@ -2239,13 +2315,13 @@ document.addEventListener('DOMContentLoaded', () => {
         let workoutCount = 0;
         let firstDate = null;
         let lastDate = null;
+        const contributingWorkouts = [];
 
         if (trophy && trophy.contributions) {
             const contributions = trophy.contributions || [];
-            const contributingWorkouts = [];
 
             contributions.forEach(contrib => {
-                const workout = appData.workouts.find(w => w.id === contrib.workoutId);
+                const workout = findWorkoutById(contrib.workoutId);
                 if (workout) contributingWorkouts.push(workout);
             });
 
@@ -2317,6 +2393,25 @@ document.addEventListener('DOMContentLoaded', () => {
             
             <div style="font-size: 0.85rem; color: #64748b; text-align: center; margin-bottom: 1.5rem; font-style: italic;">
                 "${firstDate ? formatDateForDisplay(firstDate) : 'Unknown'}  ➔  ${lastDate ? formatDateForDisplay(lastDate) : 'Unknown'}"
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Connected Workouts</h3>
+                <div style="max-height: 200px; overflow-y: auto; background: rgba(255,255,255,0.03); border-radius: 8px; padding: 0.5rem;">
+                    ${contributingWorkouts.length > 0 ? contributingWorkouts.map(w => {
+            const contrib = trophy.contributions.find(c => String(c.workoutId) === String(w.id) || String(c.workoutId) === String(w.internalId));
+            const amt = contrib ? (trophy.type === 'climbing' ? Math.round(contrib.amount) + ' ft' : contrib.amount.toFixed(1) + ' mi') : '';
+            return `
+                            <div style="padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-size: 0.85rem; color: #f8fafc; font-weight: 500;">${w.title || (w.type.charAt(0).toUpperCase() + w.type.slice(1))}</div>
+                                    <div style="font-size: 0.75rem; color: #64748b;">${formatDateForDisplay(w.date)}</div>
+                                </div>
+                                <div style="font-size: 0.85rem; color: var(--primary-color); font-weight: 600;">+${amt}</div>
+                            </div>
+                        `;
+        }).join('') : '<div style="color: #64748b; font-size: 0.8rem; text-align: center; padding: 1rem;">No workouts linked.</div>'}
+                </div>
             </div>
 
             <div class="celebration-actions" style="display: flex; gap: 0.5rem; justify-content: center; margin-top: 1rem;">
@@ -3075,7 +3170,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     let totalCalories = 0;
                     if (c.contributions) {
                         c.contributions.forEach(contrib => {
-                            const w = appData.workouts.find(x => x.id === contrib.workoutId);
+                            const w = findWorkoutById(contrib.workoutId);
                             if (w) {
                                 // Duration
                                 if (w.duration) {
@@ -3130,8 +3225,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Sort contributions by workout date desc
             contributions.sort((a, b) => {
-                const wA = appData.workouts.find(w => w.id === a.workoutId);
-                const wB = appData.workouts.find(w => w.id === b.workoutId);
+                const wA = findWorkoutById(a.workoutId);
+                const wB = findWorkoutById(b.workoutId);
                 const dateA = wA ? new Date(wA.date) : new Date(0);
                 const dateB = wB ? new Date(wB.date) : new Date(0);
                 return dateB - dateA;
@@ -3144,7 +3239,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const workoutList = document.createElement('div');
 
                 contributions.forEach(contrib => {
-                    const workout = appData.workouts.find(w => w.id === contrib.workoutId);
+                    const workout = findWorkoutById(contrib.workoutId);
                     if (workout) {
                         const workoutItem = document.createElement('div');
                         workoutItem.style.padding = '0.5rem';

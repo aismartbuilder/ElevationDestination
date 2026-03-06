@@ -10,7 +10,8 @@ import {
     query,
     where,
     orderBy,
-    writeBatch
+    writeBatch,
+    onSnapshot
 } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js';
 import { db, auth } from './firebase-config.js';
 
@@ -82,9 +83,14 @@ export const database = {
 
             const workouts = [];
             querySnapshot.forEach((doc) => {
-                // FIXED: Spread data first, then overwrite ID with the real Firestore Doc ID
-                // This prevents the internal "tempId" (timestamp) stored in data from shadowing the real doc key
-                workouts.push({ ...doc.data(), id: doc.id });
+                const data = doc.data();
+                // Preserve the stored ID (which might be the tempId used for initial linking)
+                // so we can resolve old contribution links even after the document gets a real Firestore ID
+                workouts.push({
+                    ...data,
+                    id: doc.id,
+                    internalId: data.id || doc.id
+                });
             });
             return workouts;
         } catch (e) {
@@ -500,5 +506,54 @@ export const database = {
             console.error('❌ Migration interrupted:', e);
             // Do NOT clear local storage if migration failed, so we can try again next time.
         }
+    },
+
+    // --- Real-Time Listeners ---
+
+    /**
+     * Subscribe to real-time updates on the user's workouts subcollection.
+     * @param {string} uid - The authenticated user's UID.
+     * @param {function} callback - Called with the updated workouts array on every change.
+     * @returns {function} Unsubscribe function.
+     */
+    subscribeToWorkouts(uid, callback) {
+        const workoutsRef = collection(db, 'users', uid, 'workouts');
+        const q = query(workoutsRef, orderBy('createdAt', 'desc'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const workouts = [];
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                workouts.push({
+                    ...data,
+                    id: docSnap.id,
+                    internalId: data.id || docSnap.id
+                });
+            });
+            callback(workouts);
+        }, (err) => {
+            console.error('❌ Workout listener error:', err);
+        });
+        console.log('✅ Real-time workout listener active');
+        return unsubscribe;
+    },
+
+    /**
+     * Subscribe to real-time updates on a single app_data document.
+     * @param {string} uid - The authenticated user's UID.
+     * @param {string} docName - e.g. 'challenges_my', 'trophies', 'badges'
+     * @param {function} callback - Called with the document data object on every change.
+     * @returns {function} Unsubscribe function.
+     */
+    subscribeToAppData(uid, docName, callback) {
+        const docRef = doc(db, 'users', uid, 'app_data', docName);
+        const unsubscribe = onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+                callback(docSnap.data());
+            }
+        }, (err) => {
+            console.error(`❌ AppData listener error (${docName}):`, err);
+        });
+        console.log(`✅ Real-time listener active: ${docName}`);
+        return unsubscribe;
     }
 };
