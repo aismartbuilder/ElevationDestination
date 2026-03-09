@@ -26,6 +26,12 @@
         <button id="landing-signup-btn" class="btn btn-primary">Start your Summit</button>
         <button id="landing-login-btn" class="btn btn-secondary">Login</button>
       </div>
+      <div class="try-me-group">
+        <button id="landing-tryme-btn" class="btn-try-me">
+          <span class="try-me-label">🔍 Try Me — No Account Needed</span>
+          <span class="try-me-hint">Explore everything. Data clears when you leave.</span>
+        </button>
+      </div>
     </div>
     <div class="features">
       <div class="feature-card">
@@ -99,6 +105,13 @@
 
   <!-- MAIN APP -->
   <div id="app-view" class="view-section hidden">
+
+    <!-- GUEST MODE BANNER -->
+    <div id="guest-banner" class="guest-banner hidden">
+      <span>👋 You're exploring in <strong>Guest Mode</strong> — data is not saved.</span>
+      <button id="guest-signup-btn" class="btn btn-primary btn-sm">Create Free Account</button>
+      <button id="guest-exit-btn" class="btn-text btn-sm" style="color: rgba(255,255,255,0.6);">Exit</button>
+    </div>
     <header>
       <div class="header-top">
         <div class="brand">

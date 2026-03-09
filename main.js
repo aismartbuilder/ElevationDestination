@@ -28,6 +28,9 @@ let appData = {
 // Track active Firestore real-time listeners so they can be cleaned up on logout
 let activeListeners = [];
 
+// Guest (Try Me) mode flag — data is never persisted to Firebase
+let isGuestMode = false;
+
 // --- Helper: Find Workout by ID (Handles tempId vs docId) ---
 function findWorkoutById(id) {
     if (!id) return null;
@@ -392,6 +395,59 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // ── Guest Mode Helpers ──────────────────────────────────────────────────
+    function enterGuestMode() {
+        isGuestMode = true;
+        console.log('👤 Entering Guest Mode');
+
+        // Seed with empty-but-valid state so all tabs render properly
+        appData = {
+            settings: { theme: 'theme-dark' },
+            workouts: [],
+            challenges: { climbing: [], running_walking: [], biking: [], rowing: [], my: [], active: null },
+            badges: [],
+            progress: {},
+            trophies: []
+        };
+
+        // Set guest initials
+        const userInitialsEl = document.getElementById('user-initials');
+        if (userInitialsEl) userInitialsEl.textContent = '?';
+
+        // Show banner, switch to app
+        const guestBanner = document.getElementById('guest-banner');
+        if (guestBanner) guestBanner.classList.remove('hidden');
+
+        switchView('app');
+
+        // Render everything with blank data
+        renderWorkouts();
+        renderMyChallenges();
+        renderChallenges();
+        loadBadges();
+        renderTrophies();
+        renderAchievementFacts();
+        loadSettingsToUI();
+    }
+
+    function exitGuestMode() {
+        isGuestMode = false;
+        console.log('👤 Exiting Guest Mode');
+        // Reset state
+        appData = {
+            settings: {},
+            workouts: [],
+            challenges: { climbing: [], running_walking: [], biking: [], rowing: [], my: [], active: null },
+            badges: [],
+            progress: {},
+            trophies: []
+        };
+        const guestBanner = document.getElementById('guest-banner');
+        if (guestBanner) guestBanner.classList.add('hidden');
+        switchView('landing');
+    }
+    // ──────────────────────────────────────────────────────────────────────
+
 
     // --- Auth Logic ---
     auth.onAuthStateChanged(async (user) => {
@@ -465,6 +521,25 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, 50);
     });
+
+    // Try Me (Guest Mode) Button
+    const landingTryMeBtn = document.getElementById('landing-tryme-btn');
+    if (landingTryMeBtn) {
+        landingTryMeBtn.addEventListener('click', () => enterGuestMode());
+    }
+
+    // Guest Banner Buttons
+    const guestSignupBtn = document.getElementById('guest-signup-btn');
+    if (guestSignupBtn) {
+        guestSignupBtn.addEventListener('click', () => {
+            exitGuestMode();
+            switchView('signup');
+        });
+    }
+    const guestExitBtn = document.getElementById('guest-exit-btn');
+    if (guestExitBtn) {
+        guestExitBtn.addEventListener('click', () => exitGuestMode());
+    }
 
     // Back Buttons
     document.getElementById('login-back-btn').addEventListener('click', () => switchView('landing'));
@@ -591,10 +666,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function handleForgotPassword(email) {
-        showNotification('Sending...', 'Checking for account and sending reset link.', '📧');
+        showNotification('Sending...', 'Sending password reset link...', '📧');
         const success = await auth.forgotPassword(email);
         if (success) {
-            showNotification('Success!', `A password reset link has been sent to ${email}.`, '✅');
+            showNotification('Email Sent!', `Check your inbox (and spam/junk folder) at ${email} for the reset link.`, '✅');
         }
     }
 
@@ -676,6 +751,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async () => {
+            if (isGuestMode) {
+                // Ask if they want to save by creating an account
+                const wantSignup = confirm('Your guest session data will be lost.\n\nWould you like to create a free account to save your progress?');
+                if (wantSignup) {
+                    exitGuestMode();
+                    switchView('signup');
+                } else {
+                    exitGuestMode();
+                }
+                return;
+            }
             await auth.logout();
         });
     }
@@ -792,7 +878,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 updateStarUI();
-                await database.saveUserProfile(appData.settings);
+                if (!isGuestMode) await database.saveUserProfile(appData.settings);
             });
         }
 
@@ -858,7 +944,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (type === 'distance') appData.settings.unit_distance = unit;
 
         // Persist
-        database.saveUserProfile(appData.settings);
+        if (!isGuestMode) database.saveUserProfile(appData.settings);
 
         // Update UI
         const toggles = type === 'weight' ? weightToggles : distanceToggles;
@@ -963,14 +1049,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Apply all profile updates at once
         Object.assign(appData.settings, profileUpdates);
-        const success = await database.saveUserProfile(appData.settings);
-
-        if (success) {
-            showNotification('Settings Saved', 'Profile updated.', '✅');
+        if (isGuestMode) {
+            showNotification('Settings Applied', 'Changes are for this session only.', '👤');
             if (settingsDropdown) settingsDropdown.classList.add('hidden');
         } else {
-            showNotification('Error', 'Failed to save settings.', '⚠️');
+            const success = await database.saveUserProfile(appData.settings);
+            if (success) {
+                showNotification('Settings Saved', 'Profile updated.', '✅');
+                if (settingsDropdown) settingsDropdown.classList.add('hidden');
+            } else {
+                showNotification('Error', 'Failed to save settings.', '⚠️');
+            }
         }
+
     });
 
     // --- Weight & Goal History Rendering ---
@@ -1148,7 +1239,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         appData.settings.theme = themeName;
-        database.saveUserProfile({ theme: themeName });
+        if (!isGuestMode) database.saveUserProfile({ theme: themeName });
     }
     themeBtns.forEach(btn => btn.addEventListener('click', () => setTheme(btn.dataset.theme)));
 
@@ -1531,41 +1622,48 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof updateBulkActionUI === 'function') updateBulkActionUI();
 
 
-        // Cloud Update
-        try {
-            const docId = await database.addWorkout(newWorkout);
-            console.log(`🔄 Updating workout ID: ${tempId} -> ${docId}`);
 
-            // Find the workout by its TEMP ID and update it with the real Firestore ID
-            const workoutIndex = appData.workouts.findIndex(w => w.id === tempId);
-            if (workoutIndex !== -1) {
-                appData.workouts[workoutIndex].id = docId;
-                // Proactively update any contributions that were logged with the tempId
-                appData.challenges.my.forEach(challenge => {
-                    if (challenge.contributions) {
-                        challenge.contributions.forEach(contrib => {
-                            if (String(contrib.workoutId) === String(tempId)) {
-                                contrib.workoutId = docId;
-                                console.log(`✅ Updated contribution workoutId: ${tempId} -> ${docId} in challenge: ${challenge.title}`);
-                            }
-                        });
-                    }
-                });
-                await saveMyChallengesProp(); // Save the updated IDs to cloud
-                console.log('✅ Successfully updated workout ID in local array');
-            } else {
-                console.error('⚠️ Could not find workout with temp ID:', tempId);
+        // Cloud Update (skipped in guest mode)
+        if (!isGuestMode) {
+            try {
+                const docId = await database.addWorkout(newWorkout);
+                console.log(`🔄 Updating workout ID: ${tempId} -> ${docId}`);
+
+                // Find the workout by its TEMP ID and update it with the real Firestore ID
+                const workoutIndex = appData.workouts.findIndex(w => w.id === tempId);
+                if (workoutIndex !== -1) {
+                    appData.workouts[workoutIndex].id = docId;
+                    // Proactively update any contributions that were logged with the tempId
+                    appData.challenges.my.forEach(challenge => {
+                        if (challenge.contributions) {
+                            challenge.contributions.forEach(contrib => {
+                                if (String(contrib.workoutId) === String(tempId)) {
+                                    contrib.workoutId = docId;
+                                    console.log(`✅ Updated contribution workoutId: ${tempId} -> ${docId} in challenge: ${challenge.title}`);
+                                }
+                            });
+                        }
+                    });
+                    await saveMyChallengesProp(); // Save the updated IDs to cloud
+                    console.log('✅ Successfully updated workout ID in local array');
+                } else {
+                    console.error('⚠️ Could not find workout with temp ID:', tempId);
+                }
+
+                // Re-render to ensure DOM has the correct ID for selection
+                renderWorkouts();
+                renderMyChallenges(); // Refresh the list to show the "Connected Workouts" correctly if showing
+
+                showNotification('Logged', 'Workout saved to cloud!', '☁️');
+            } catch (e) {
+                console.error(e);
+                showNotification('Saved Local', 'Could not sync to cloud.', '⚠️');
             }
-
-            // Re-render to ensure DOM has the correct ID for selection
-            renderWorkouts();
-            renderMyChallenges(); // Refresh the list to show the "Connected Workouts" correctly if showing
-
-            showNotification('Logged', 'Workout saved to cloud!', '☁️');
-        } catch (e) {
-            console.error(e);
-            showNotification('Saved Local', 'Could not sync to cloud.', '⚠️');
+        } else {
+            // Guest mode: data stays in memory only
+            showNotification('Logged (Guest)', 'Workout saved for this session only.', '👤');
         }
+
 
         // Clear and reset to today's date
         logDescInput.value = '';
@@ -1801,12 +1899,16 @@ document.addEventListener('DOMContentLoaded', () => {
         appData.workouts[workoutIndex] = updatedWorkout;
 
         // Update in cloud
-        try {
-            await database.updateWorkout(editingWorkoutId, updatedWorkout);
-            showNotification('Updated', 'Workout updated successfully!', '✅');
-        } catch (e) {
-            console.error(e);
-            showNotification('Warning', 'Updated locally but cloud sync failed.', '⚠️');
+        if (!isGuestMode) {
+            try {
+                await database.updateWorkout(editingWorkoutId, updatedWorkout);
+                showNotification('Updated', 'Workout updated successfully!', '✅');
+            } catch (e) {
+                console.error(e);
+                showNotification('Warning', 'Updated locally but cloud sync failed.', '⚠️');
+            }
+        } else {
+            showNotification('Updated (Guest)', 'Workout updated for this session.', '👤');
         }
 
         // Re-render and reset
@@ -2081,16 +2183,18 @@ document.addEventListener('DOMContentLoaded', () => {
             await syncTrophies(); // Ensure trophies are synced after reverting progress
         }
 
-        // 3. Delete from cloud
-        try {
-            const deleted = await database.deleteWorkout(w.id);
-            if (deleted) {
-                console.log('☁️ Successfully deleted from cloud:', w.id);
-            } else {
-                console.error('❌ Failed to delete from cloud:', w.id);
+        // 3. Delete from cloud (skipped in guest mode)
+        if (!isGuestMode) {
+            try {
+                const deleted = await database.deleteWorkout(w.id);
+                if (deleted) {
+                    console.log('☁️ Successfully deleted from cloud:', w.id);
+                } else {
+                    console.error('❌ Failed to delete from cloud:', w.id);
+                }
+            } catch (error) {
+                console.error('❌ Error deleting from cloud:', error);
             }
-        } catch (error) {
-            console.error('❌ Error deleting from cloud:', error);
         }
 
         return revertedCount;
@@ -2155,7 +2259,9 @@ document.addEventListener('DOMContentLoaded', () => {
     async function unlockBadge(badge) {
         appData.badges.push(badge.id);
         updateBadgeUI(badge.id);
-        await database.saveUnlockedBadges(appData.badges);
+        if (!isGuestMode) {
+            await database.saveUnlockedBadges(appData.badges);
+        }
         alert(`🏆 Unlocked: ${badge.name}!`);
     }
 
@@ -2259,7 +2365,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (changed) {
-            await database.saveTrophies(appData.trophies);
+            if (!isGuestMode) await database.saveTrophies(appData.trophies);
             renderTrophies();
             if (appData.trophies.length < initialCount) {
                 showNotification('Trophies Updated', 'Trophy case updated.', '🏆');
@@ -2292,10 +2398,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         appData.trophies.unshift(trophy); // Add to top
 
-        try {
-            await database.saveTrophies(appData.trophies);
-        } catch (error) {
-            console.error('Error saving trophy:', error);
+        if (!isGuestMode) {
+            try {
+                await database.saveTrophies(appData.trophies);
+            } catch (error) {
+                console.error('Error saving trophy:', error);
+            }
         }
 
         renderTrophies();
@@ -3084,8 +3192,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function getActiveChallenges() { return appData.challenges.my; }
 
     async function saveMyChallengesProp() {
+        if (isGuestMode) return; // No-op in guest mode
         await database.saveChallenges('my', appData.challenges.my);
     }
+
 
     async function addToMyChallenges(templateId) {
         // Find in defaults or custom
@@ -3624,7 +3734,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const newC = { id: 'custom_c_' + Date.now(), title: name, height: heightMeters, type: 'climbing' };
                 appData.challenges.climbing.push(newC);
-                await database.saveChallenges('custom_climbing', appData.challenges.climbing);
+                if (!isGuestMode) await database.saveChallenges('custom_climbing', appData.challenges.climbing);
                 renderChallenges();
                 document.getElementById('new-climbing-challenge-name').value = '';
                 document.getElementById('new-climbing-challenge-height').value = '';
@@ -3654,7 +3764,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
 
                 appData.challenges.running_walking.push(newC);
-                await database.saveChallenges('custom_running_walking', appData.challenges.running_walking);
+                if (!isGuestMode) await database.saveChallenges('custom_running_walking', appData.challenges.running_walking);
                 renderChallenges();
 
                 document.getElementById('new-running-walking-challenge-name').value = '';
@@ -3684,7 +3794,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (!appData.challenges.biking) appData.challenges.biking = [];
                 appData.challenges.biking.push(newC);
-                await database.saveChallenges('custom_biking', appData.challenges.biking);
+                if (!isGuestMode) await database.saveChallenges('custom_biking', appData.challenges.biking);
                 renderChallenges();
 
                 document.getElementById('new-biking-challenge-name').value = '';
@@ -3709,7 +3819,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const newC = { id: 'custom_r_' + Date.now(), title: name, distance: distKm, type: 'rowing' };
                 if (!appData.challenges.rowing) appData.challenges.rowing = [];
                 appData.challenges.rowing.push(newC);
-                await database.saveChallenges('custom_rowing', appData.challenges.rowing);
+                if (!isGuestMode) await database.saveChallenges('custom_rowing', appData.challenges.rowing);
                 renderChallenges();
                 document.getElementById('new-rowing-challenge-name').value = '';
                 document.getElementById('new-rowing-challenge-distance').value = '';
