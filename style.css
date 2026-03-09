@@ -2993,3 +2993,279 @@ details.password-change-section summary::-webkit-details-marker {
 .guest-banner:not(.hidden) {
   animation: guestPulse 3s ease-in-out infinite, fadeIn 0.5s ease-out;
 }
+
+/* ==============================
+   ONBOARDING WALKTHROUGH
+   ============================== */
+
+/* Tour Help Button (? help icon) in header */
+#tour-help-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-muted);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+#tour-help-btn:hover {
+  background: rgba(0, 242, 234, 0.12);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  transform: scale(1.1);
+}
+
+/* Full-screen overlay */
+#walkthrough-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  pointer-events: auto;
+  display: none;
+}
+
+#walkthrough-overlay.wt-active {
+  display: block;
+}
+
+/* Dark backdrop with spotlight hole via box-shadow */
+#wt-backdrop {
+  position: absolute;
+  inset: 0;
+  transition: box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  border-radius: 0;
+}
+
+/* Default: full-black (welcome / done screens) */
+#wt-backdrop.wt-full {
+  background: rgba(0, 0, 0, 0.82);
+}
+
+/* Spotlight mode: everything dark except the target rect */
+#wt-backdrop.wt-spotlight {
+  background: transparent;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.80);
+  border-radius: 12px;
+  pointer-events: none;
+}
+
+/* Welcome / Done center panels */
+.wt-center-panel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(145deg, rgba(20, 28, 46, 0.98), rgba(30, 41, 59, 0.98));
+  border: 1px solid rgba(0, 242, 234, 0.25);
+  border-radius: 1.5rem;
+  padding: 2.5rem 2rem;
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(0, 242, 234, 0.06);
+  animation: wtFadeUp 0.4s ease-out;
+  pointer-events: auto;
+}
+
+.wt-center-panel .wt-emoji {
+  font-size: 3.5rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.wt-center-panel h2 {
+  color: white;
+  font-size: 1.6rem;
+  margin: 0 0 0.75rem 0;
+  line-height: 1.2;
+}
+
+.wt-center-panel p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0 0 1.75rem 0;
+}
+
+.wt-center-panel .wt-btn-row {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+/* Callout bubble for spotlight steps */
+.wt-callout {
+  position: absolute;
+  background: linear-gradient(145deg, rgba(20, 28, 46, 0.98), rgba(30, 41, 59, 0.98));
+  border: 1px solid rgba(0, 242, 234, 0.25);
+  border-radius: 1rem;
+  padding: 1.25rem 1.5rem;
+  max-width: 320px;
+  min-width: 240px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  animation: wtFadeUp 0.35s ease-out;
+  pointer-events: auto;
+  z-index: 10001;
+}
+
+.wt-callout::before {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: rgba(25, 35, 55, 0.99);
+  border: 1px solid rgba(0, 242, 234, 0.25);
+  transform: rotate(45deg);
+}
+
+/* Arrow positions */
+.wt-callout.arrow-top::before {
+  top: -7px;
+  left: 24px;
+  border-bottom: none;
+  border-right: none;
+}
+
+.wt-callout.arrow-bottom::before {
+  bottom: -7px;
+  left: 24px;
+  border-top: none;
+  border-left: none;
+}
+
+.wt-callout.arrow-left::before {
+  left: -7px;
+  top: 20px;
+  border-top: none;
+  border-right: none;
+}
+
+.wt-callout.arrow-right::before {
+  right: -7px;
+  top: 20px;
+  border-bottom: none;
+  border-left: none;
+}
+
+.wt-callout .wt-step-badge {
+  display: inline-block;
+  background: rgba(0, 242, 234, 0.12);
+  color: var(--primary-color);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  border-radius: 100px;
+  margin-bottom: 0.6rem;
+}
+
+.wt-callout h3 {
+  color: white;
+  font-size: 1.05rem;
+  margin: 0 0 0.4rem 0;
+}
+
+.wt-callout p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  margin: 0 0 1rem 0;
+}
+
+.wt-callout .wt-btn-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wt-callout .wt-dots {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.wt-callout .wt-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: background 0.2s;
+}
+
+.wt-callout .wt-dot.active {
+  background: var(--primary-color);
+  width: 18px;
+  border-radius: 3px;
+}
+
+/* Walkthrough buttons */
+.wt-btn {
+  padding: 0.55rem 1.1rem;
+  border-radius: 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.wt-btn-primary {
+  background: linear-gradient(135deg, var(--primary-color), #00a8a3);
+  color: #0f172a;
+}
+
+.wt-btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.wt-btn-ghost {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+.wt-btn-ghost:hover {
+  color: white;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.wt-btn-big {
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  border-radius: 0.75rem;
+}
+
+/* Spotlight ring highlight on target element */
+.wt-highlight-ring {
+  outline: 3px solid var(--primary-color) !important;
+  outline-offset: 4px !important;
+  box-shadow: 0 0 0 6px rgba(0, 242, 234, 0.18) !important;
+  border-radius: 10px !important;
+  z-index: 9999 !important;
+  position: relative !important;
+}
+
+/* Animations */
+@keyframes wtFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

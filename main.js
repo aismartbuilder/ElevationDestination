@@ -428,6 +428,9 @@ document.addEventListener('DOMContentLoaded', () => {
         renderTrophies();
         renderAchievementFacts();
         loadSettingsToUI();
+
+        // Always show walkthrough for guest users
+        setTimeout(() => { if (window._walkthrough) window._walkthrough.open(); }, 600);
     }
 
     function exitGuestMode() {
@@ -710,7 +713,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const success = await auth.signup(name, email, user, pass);
-            if (success) e.target.reset();
+            if (success) {
+                e.target.reset();
+                // Trigger walkthrough for brand-new accounts (after switchView('app') fires)
+                setTimeout(() => {
+                    if (window._walkthrough) {
+                        const uid = auth.getUser()?.uid;
+                        if (!window._walkthrough.hasSeen(uid)) {
+                            window._walkthrough.markSeen(uid);
+                            window._walkthrough.open();
+                        }
+                    }
+                }, 800);
+            }
         } finally {
             if (btn) btn.classList.remove('loading');
         }
@@ -4086,4 +4101,279 @@ document.addEventListener('DOMContentLoaded', () => {
 
     console.log('💡 TIP: Run nukeAllWorkouts() for complete cleanup (localStorage + Firestore)');
 
+    // ══════════════════════════════════════════════════════════
+    // ONBOARDING WALKTHROUGH ENGINE
+    // ══════════════════════════════════════════════════════════
+    const Walkthrough = (() => {
+        const overlay = document.getElementById('walkthrough-overlay');
+        const backdrop = document.getElementById('wt-backdrop');
+        let currentStep = 0;
+        let prevHighlight = null;
+
+        // Tour steps definition
+        // type: 'center' = full-screen modal  |  'spotlight' = element highlight + callout
+        // targetId: element to spotlight
+        // arrow: which side the callout arrow points from ('top','bottom','left','right')
+        const STEPS = [
+            {
+                type: 'center',
+                emoji: '🏔️',
+                title: 'Welcome to ElevationDestination!',
+                body: "You're about to turn sweat into summits. Let's take a quick 30-second tour so you know exactly where everything lives.",
+                nextLabel: "Let's Go →",
+                skipLabel: 'Skip Tour',
+            },
+            {
+                type: 'spotlight',
+                targetId: 'user-avatar',
+                arrow: 'top',
+                badge: 'Step 1 of 5',
+                title: '⚙️ Your Settings',
+                body: 'Click your avatar (initials) anytime to open Settings — enter your weight, height, age, gender, weekly goal, and choose your theme.',
+            },
+            {
+                type: 'spotlight',
+                targetId: 'tab-btn-myworkouts',  // resolved below via querySelector
+                tabSelector: '.tab-btn[data-tab="myworkouts"]',
+                arrow: 'bottom',
+                badge: 'Step 2 of 5',
+                title: '💪 My Workouts',
+                body: 'Log every activity here: pick your type (bike, run, row…), set the date, duration, distance, and output. Your history lives here too.',
+            },
+            {
+                type: 'spotlight',
+                tabSelector: '.tab-btn[data-tab="mychallenges"]',
+                arrow: 'bottom',
+                badge: 'Step 3 of 5',
+                title: '🎯 My Active Challenges',
+                body: 'See all challenges you\'ve joined and your live progress toward each one. Assign logged workouts to push your progress.',
+            },
+            {
+                type: 'spotlight',
+                tabSelector: '.tab-btn[data-tab="challenges"]',
+                arrow: 'bottom',
+                badge: 'Step 4 of 5',
+                title: '🏔️ Challenges',
+                body: 'Browse climbing, biking, running/walking, and rowing challenges. Start one to set your next summit goal!',
+            },
+            {
+                type: 'spotlight',
+                tabSelector: '.tab-btn[data-tab="profile"]',
+                arrow: 'bottom',
+                badge: 'Step 5 of 5',
+                title: '🏆 Achievements',
+                body: 'Complete challenges to fill your Trophy Case and unlock real-world comparison facts — like climbing past the Eiffel Tower!',
+            },
+            {
+                type: 'center',
+                emoji: '🚀',
+                title: "You're all set!",
+                body: "Start by logging your first workout, then pick a challenge to conquer. You can always re-open this tour from the ❓ button in the header.",
+                nextLabel: 'Get Started 🚀',
+                skipLabel: null,
+            },
+        ];
+
+        const TOTAL_SPOTLIGHT = STEPS.filter(s => s.type === 'spotlight').length;
+
+        function resolveTarget(step) {
+            if (step.tabSelector) return document.querySelector(step.tabSelector);
+            if (step.targetId) return document.getElementById(step.targetId);
+            return null;
+        }
+
+        function clearHighlight() {
+            if (prevHighlight) {
+                prevHighlight.classList.remove('wt-highlight-ring');
+                prevHighlight = null;
+            }
+        }
+
+        function setSpotlight(el) {
+            if (!el) {
+                backdrop.className = 'wt-full';
+                backdrop.style.cssText = '';
+                return;
+            }
+            const r = el.getBoundingClientRect();
+            const pad = 10;
+            backdrop.className = 'wt-spotlight';
+            backdrop.style.top = (r.top - pad) + 'px';
+            backdrop.style.left = (r.left - pad) + 'px';
+            backdrop.style.width = (r.width + pad * 2) + 'px';
+            backdrop.style.height = (r.height + pad * 2) + 'px';
+            backdrop.style.position = 'absolute';
+            backdrop.style.inset = 'unset';
+
+            el.classList.add('wt-highlight-ring');
+            prevHighlight = el;
+        }
+
+        function positionCallout(callout, targetEl, arrow) {
+            const r = targetEl.getBoundingClientRect();
+            const cW = callout.offsetWidth || 280;
+            const cH = callout.offsetHeight || 180;
+            const vW = window.innerWidth;
+            const vH = window.innerHeight;
+            const pad = 14;
+
+            let top, left;
+
+            if (arrow === 'bottom') {
+                // Callout sits ABOVE the target
+                top = r.top - cH - pad;
+                left = r.left + r.width / 2 - cW / 2;
+            } else if (arrow === 'top') {
+                // Callout sits BELOW the target
+                top = r.bottom + pad;
+                left = r.left + r.width / 2 - cW / 2;
+            } else if (arrow === 'right') {
+                // Callout sits to the LEFT of the target
+                top = r.top + r.height / 2 - cH / 2;
+                left = r.left - cW - pad;
+            } else {
+                // arrow === 'left' → callout sits to the RIGHT
+                top = r.top + r.height / 2 - cH / 2;
+                left = r.right + pad;
+            }
+
+            // Clamp within viewport
+            left = Math.max(10, Math.min(left, vW - cW - 10));
+            top = Math.max(10, Math.min(top, vH - cH - 10));
+
+            callout.style.top = top + 'px';
+            callout.style.left = left + 'px';
+        }
+
+        function buildDots(total, active) {
+            return Array.from({ length: total }, (_, i) =>
+                `<span class="wt-dot${i === active ? ' active' : ''}"></span>`
+            ).join('');
+        }
+
+        function renderStep(index) {
+            clearHighlight();
+            // Remove previous content (all children except #wt-backdrop)
+            [...overlay.children].forEach(c => { if (c.id !== 'wt-backdrop') c.remove(); });
+
+            const step = STEPS[index];
+            currentStep = index;
+
+            if (step.type === 'center') {
+                // Full backdrop, no spotlight
+                backdrop.className = 'wt-full';
+                backdrop.style.cssText = '';
+
+                const panel = document.createElement('div');
+                panel.className = 'wt-center-panel';
+                panel.innerHTML = `
+                    <span class="wt-emoji">${step.emoji}</span>
+                    <h2>${step.title}</h2>
+                    <p>${step.body}</p>
+                    <div class="wt-btn-row">
+                        ${step.skipLabel ? `<button class="wt-btn wt-btn-ghost wt-skip">${step.skipLabel}</button>` : ''}
+                        <button class="wt-btn wt-btn-primary wt-btn-big wt-next">${step.nextLabel}</button>
+                    </div>
+                `;
+                overlay.appendChild(panel);
+
+                panel.querySelector('.wt-next')?.addEventListener('click', () => {
+                    if (index === STEPS.length - 1) close();
+                    else next();
+                });
+                panel.querySelector('.wt-skip')?.addEventListener('click', () => close());
+
+            } else {
+                // Spotlight step
+                const targetEl = resolveTarget(step);
+                setSpotlight(targetEl);
+
+                // Spotlight index among spotlight steps only
+                const spotIdx = STEPS.slice(0, index + 1).filter(s => s.type === 'spotlight').length - 1;
+
+                const callout = document.createElement('div');
+                callout.className = `wt-callout arrow-${step.arrow}`;
+                callout.innerHTML = `
+                    <div class="wt-step-badge">${step.badge}</div>
+                    <h3>${step.title}</h3>
+                    <p>${step.body}</p>
+                    <div class="wt-btn-row">
+                        <div class="wt-dots">${buildDots(TOTAL_SPOTLIGHT, spotIdx)}</div>
+                        <div style="display:flex;gap:0.4rem;">
+                            ${index > 0 ? `<button class="wt-btn wt-btn-ghost wt-prev">← Back</button>` : ''}
+                            <button class="wt-btn wt-btn-primary wt-next">
+                                ${index === STEPS.length - 1 ? 'Finish' : 'Next →'}
+                            </button>
+                        </div>
+                    </div>
+                    <div style="text-align:right;margin-top:0.6rem;">
+                        <button class="wt-btn wt-btn-ghost wt-skip" style="font-size:0.75rem;padding:0.2rem 0.6rem;">Skip Tour</button>
+                    </div>
+                `;
+                overlay.appendChild(callout);
+
+                // Position after render (needs dimensions)
+                requestAnimationFrame(() => {
+                    if (targetEl) positionCallout(callout, targetEl, step.arrow);
+                });
+
+                callout.querySelector('.wt-next')?.addEventListener('click', () => {
+                    if (index === STEPS.length - 1) close();
+                    else next();
+                });
+                callout.querySelector('.wt-prev')?.addEventListener('click', () => prev());
+                callout.querySelector('.wt-skip')?.addEventListener('click', () => close());
+            }
+        }
+
+        function next() { if (currentStep < STEPS.length - 1) renderStep(currentStep + 1); }
+        function prev() { if (currentStep > 0) renderStep(currentStep - 1); }
+
+        function open() {
+            overlay.classList.add('wt-active');
+            renderStep(0);
+        }
+
+        function close() {
+            clearHighlight();
+            overlay.classList.remove('wt-active');
+            [...overlay.children].forEach(c => { if (c.id !== 'wt-backdrop') c.remove(); });
+            backdrop.className = '';
+            backdrop.style.cssText = '';
+        }
+
+        // Mark tour as seen for the given uid (skipped for guests)
+        function markSeen(uid) {
+            if (uid) localStorage.setItem(`wt_seen_${uid}`, '1');
+        }
+
+        function hasSeen(uid) {
+            if (!uid) return false;
+            return !!localStorage.getItem(`wt_seen_${uid}`);
+        }
+
+        // Public API
+        return { open, close, markSeen, hasSeen };
+    })();
+
+    // Wire up ❓ tour help button (always re-opens tour)
+    const tourHelpBtn = document.getElementById('tour-help-btn');
+    if (tourHelpBtn) {
+        tourHelpBtn.addEventListener('click', () => Walkthrough.open());
+    }
+
+    // Patch signup form to trigger walkthrough on first signup
+    const origSignupForm = document.getElementById('signup-form');
+    if (origSignupForm) {
+        // The existing listener already handles auth.signup().
+        // We listen for a custom event fired after successful signup.
+        origSignupForm.addEventListener('wt:signup-success', () => {
+            setTimeout(() => Walkthrough.open(), 600);
+        });
+    }
+
+    // Expose walkthrough globally so enterGuestMode / signup can call it
+    window._walkthrough = Walkthrough;
+
 });
+
