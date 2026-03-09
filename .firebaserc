@@ -15,6 +15,9 @@
       "hosting": {
         "prod": [
           "elevationdestination"
+        ],
+        "dev": [
+          "elevationdestination2026"
         ]
       }
     }

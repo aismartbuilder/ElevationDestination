@@ -747,6 +747,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         document.addEventListener('click', (e) => {
+            // Don't auto-close settings if the walkthrough is showing it
+            if (window._walkthroughSettingsOpen) return;
             if (!settingsDropdown.classList.contains('hidden') &&
                 !settingsDropdown.contains(e.target) &&
                 e.target !== userAvatar) {
@@ -4117,60 +4119,106 @@ document.addEventListener('DOMContentLoaded', () => {
         const STEPS = [
             {
                 type: 'center',
-                emoji: '🏔️',
+                emoji: '\uD83C\uDFD4\uFE0F',
                 title: 'Welcome to ElevationDestination!',
                 body: "You're about to turn sweat into summits. Let's take a quick 30-second tour so you know exactly where everything lives.",
-                nextLabel: "Let's Go →",
+                nextLabel: "Let's Go \u2192",
                 skipLabel: 'Skip Tour',
+                onEnter: () => {
+                    // Close settings panel if open, reset to My Workouts tab
+                    const sd = document.getElementById('settings-dropdown');
+                    if (sd && !sd.classList.contains('hidden')) sd.classList.add('hidden');
+                    const firstTab = document.querySelector('.tab-btn[data-tab="myworkouts"]');
+                    if (firstTab) firstTab.click();
+                },
             },
             {
                 type: 'spotlight',
                 targetId: 'user-avatar',
                 arrow: 'top',
                 badge: 'Step 1 of 5',
-                title: '⚙️ Your Settings',
-                body: 'Click your avatar (initials) anytime to open Settings — enter your weight, height, age, gender, weekly goal, and choose your theme.',
+                title: '\u2699\uFE0F Your Settings',
+                body: 'Click this avatar button (your initials) anytime to open Settings \u2014 enter your weight, height, age, gender, and weekly goal. We\'ve opened it for you below!',
+                onEnter: () => {
+                    // Block click-away listener, then open settings above overlay
+                    window._walkthroughSettingsOpen = true;
+                    const sd = document.getElementById('settings-dropdown');
+                    if (sd) {
+                        sd.classList.remove('hidden');
+                        sd.style.zIndex = '10002';
+                        sd.style.position = 'fixed';
+                        sd.style.top = '80px';
+                        sd.style.right = '10px';
+                    }
+                },
             },
             {
                 type: 'spotlight',
-                targetId: 'tab-btn-myworkouts',  // resolved below via querySelector
                 tabSelector: '.tab-btn[data-tab="myworkouts"]',
                 arrow: 'bottom',
                 badge: 'Step 2 of 5',
-                title: '💪 My Workouts',
-                body: 'Log every activity here: pick your type (bike, run, row…), set the date, duration, distance, and output. Your history lives here too.',
+                title: '\uD83D\uDCAA My Workouts',
+                body: 'We switched to My Workouts! Log every activity here: pick your type (bike, run, row\u2026), set the date, duration, distance, and output. Your history lives here too.',
+                onEnter: () => {
+                    // Clear guard, reset settings dropdown fully
+                    window._walkthroughSettingsOpen = false;
+                    const sd = document.getElementById('settings-dropdown');
+                    if (sd) {
+                        sd.style.cssText = '';
+                        sd.classList.add('hidden');
+                    }
+                    const tab = document.querySelector('.tab-btn[data-tab="myworkouts"]');
+                    if (tab) tab.click();
+                },
             },
             {
                 type: 'spotlight',
                 tabSelector: '.tab-btn[data-tab="mychallenges"]',
                 arrow: 'bottom',
                 badge: 'Step 3 of 5',
-                title: '🎯 My Active Challenges',
-                body: 'See all challenges you\'ve joined and your live progress toward each one. Assign logged workouts to push your progress.',
+                title: '\uD83C\uDFAF My Active Challenges',
+                body: 'We switched to My Challenges! See all challenges you\'ve joined and your live progress. Assign logged workouts here to push toward your goal.',
+                onEnter: () => {
+                    const tab = document.querySelector('.tab-btn[data-tab="mychallenges"]');
+                    if (tab) tab.click();
+                },
             },
             {
                 type: 'spotlight',
                 tabSelector: '.tab-btn[data-tab="challenges"]',
                 arrow: 'bottom',
                 badge: 'Step 4 of 5',
-                title: '🏔️ Challenges',
-                body: 'Browse climbing, biking, running/walking, and rowing challenges. Start one to set your next summit goal!',
+                title: '\uD83C\uDFD4\uFE0F Challenges',
+                body: 'We opened the Challenges tab! Browse climbing, biking, running/walking, and rowing challenges — pick one to set your next summit goal!',
+                onEnter: () => {
+                    const tab = document.querySelector('.tab-btn[data-tab="challenges"]');
+                    if (tab) tab.click();
+                },
             },
             {
                 type: 'spotlight',
                 tabSelector: '.tab-btn[data-tab="profile"]',
                 arrow: 'bottom',
                 badge: 'Step 5 of 5',
-                title: '🏆 Achievements',
-                body: 'Complete challenges to fill your Trophy Case and unlock real-world comparison facts — like climbing past the Eiffel Tower!',
+                title: '\uD83C\uDFC6 Achievements',
+                body: 'We opened Achievements! Complete challenges to fill your Trophy Case and unlock real-world comparison facts — like climbing past the Eiffel Tower!',
+                onEnter: () => {
+                    const tab = document.querySelector('.tab-btn[data-tab="profile"]');
+                    if (tab) tab.click();
+                },
             },
             {
                 type: 'center',
-                emoji: '🚀',
+                emoji: '\uD83D\uDE80',
                 title: "You're all set!",
-                body: "Start by logging your first workout, then pick a challenge to conquer. You can always re-open this tour from the ❓ button in the header.",
-                nextLabel: 'Get Started 🚀',
+                body: "Start by logging your first workout, then pick a challenge to conquer. You can always re-open this tour from the ? button in the header.",
+                nextLabel: 'Get Started \uD83D\uDE80',
                 skipLabel: null,
+                onEnter: () => {
+                    // Return to My Workouts as start point
+                    const tab = document.querySelector('.tab-btn[data-tab="myworkouts"]');
+                    if (tab) tab.click();
+                },
             },
         ];
 
@@ -4259,6 +4307,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const step = STEPS[index];
             currentStep = index;
 
+            // Fire onEnter action (opens the tab / panel) before rendering UI
+            if (step.onEnter) step.onEnter();
+
             if (step.type === 'center') {
                 // Full backdrop, no spotlight
                 backdrop.className = 'wt-full';
@@ -4284,9 +4335,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 panel.querySelector('.wt-skip')?.addEventListener('click', () => close());
 
             } else {
-                // Spotlight step
+                // Spotlight step — defer spotlight positioning one frame so any onEnter
+                // DOM changes (e.g. showing the settings dropdown) have time to paint.
                 const targetEl = resolveTarget(step);
-                setSpotlight(targetEl);
 
                 // Spotlight index among spotlight steps only
                 const spotIdx = STEPS.slice(0, index + 1).filter(s => s.type === 'spotlight').length - 1;
@@ -4312,10 +4363,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 overlay.appendChild(callout);
 
-                // Position after render (needs dimensions)
-                requestAnimationFrame(() => {
-                    if (targetEl) positionCallout(callout, targetEl, step.arrow);
-                });
+                // Position spotlight + callout after browser paints the onEnter changes
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    if (targetEl) {
+                        setSpotlight(targetEl);
+                        positionCallout(callout, targetEl, step.arrow);
+                    }
+                }));
 
                 callout.querySelector('.wt-next')?.addEventListener('click', () => {
                     if (index === STEPS.length - 1) close();
@@ -4340,6 +4394,10 @@ document.addEventListener('DOMContentLoaded', () => {
             [...overlay.children].forEach(c => { if (c.id !== 'wt-backdrop') c.remove(); });
             backdrop.className = '';
             backdrop.style.cssText = '';
+            // Always clean up settings if tour is closed mid-step
+            window._walkthroughSettingsOpen = false;
+            const sd = document.getElementById('settings-dropdown');
+            if (sd) { sd.style.cssText = ''; sd.classList.add('hidden'); }
         }
 
         // Mark tour as seen for the given uid (skipped for guests)
