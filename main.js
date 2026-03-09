@@ -4235,6 +4235,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 prevHighlight.classList.remove('wt-highlight-ring');
                 prevHighlight = null;
             }
+            // Remove tab-nav elevation if present
+            const tabNav = document.querySelector('.tab-nav');
+            if (tabNav) tabNav.classList.remove('wt-nav-elevated');
         }
 
         function setSpotlight(el) {
@@ -4255,6 +4258,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             el.classList.add('wt-highlight-ring');
             prevHighlight = el;
+
+            // If the spotlighted element is inside .tab-nav, elevate the whole nav above the overlay
+            const tabNav = document.querySelector('.tab-nav');
+            if (tabNav && tabNav.contains(el)) {
+                tabNav.classList.add('wt-nav-elevated');
+            }
         }
 
         function positionCallout(callout, targetEl, arrow) {

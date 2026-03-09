@@ -3253,8 +3253,14 @@ details.password-change-section summary::-webkit-details-marker {
   outline-offset: 4px !important;
   box-shadow: 0 0 0 6px rgba(0, 242, 234, 0.18) !important;
   border-radius: 10px !important;
-  z-index: 9999 !important;
+  z-index: 10001 !important;
   position: relative !important;
+}
+
+/* Lift the tab-nav above the overlay when a tab step is spotlighted */
+.wt-nav-elevated {
+  position: relative !important;
+  z-index: 10001 !important;
 }
 
 /* Animations */
